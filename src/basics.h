@@ -31,7 +31,8 @@ struct Line {
     std::array<float, 4> model;
     float thickness;
     std::array<float, 3> rgb;
-    float anitAliasing;
+    std::array<float,2> resolution;
+    float antiAliasing;
     unsigned int VAO;
     unsigned int VBO;
     unsigned int EBO;
@@ -40,6 +41,7 @@ struct Line {
 
     Line(float thickness = 2, std::array<float, 3> rgb = std::array<float, 3>{ 0.0f,0.0f,0.0f }, float antiAliasing = 1.0f);
     void AddPoint(std::array<float,3> point);
+    void Build();
     ~Line();
     void Draw(unsigned int width, unsigned int height);
 
