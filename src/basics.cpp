@@ -77,8 +77,8 @@ Segment::Segment(std::array<float,3>  _p , float _length,float _angle, float _th
         {
             std::cout << "Hello" << std::endl;
             // open files
-            vShaderFile.open("../shaders/LineVertex.vs");
-            fShaderFile.open("../shaders/LineFragment.fs");
+            vShaderFile.open("../shaders/SegmentVertex.vs");
+            fShaderFile.open("../shaders/SegmentFragment.fs");
             std::stringstream vShaderStream, fShaderStream;
             // read file's buffer contents into streams
             vShaderStream << vShaderFile.rdbuf();
