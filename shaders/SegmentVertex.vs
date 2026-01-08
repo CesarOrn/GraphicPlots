@@ -23,7 +23,7 @@ void main() {
     vec2 O = vec2(-T.y , T.x);
     
     vec2 p = point + uv.x*T*l + uvCenter.x*T*t + uvCenter.y*O*t;
-    vec2 aspect = vec2(1,resolution.y/resolution.x);
+    //vec2 aspect = vec2(1,resolution.y/resolution.x);
     gl_Position = vec4(p, 0.0, 1.0);
 
     T = vec2(1.0, 0.0);

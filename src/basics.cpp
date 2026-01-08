@@ -163,7 +163,7 @@ void Segment::Draw(unsigned int width, unsigned int height){
 }
 
 
-Line::Line(float _thickness, std::array<float,3>  _rgb ,float _antiAliasing){
+Line::Line(float _angle, float _thickness, std::array<float,3>  _rgb ,float _antiAliasing){
     if(!initalized){
 
         std::string vertexCode;
@@ -215,7 +215,7 @@ Line::Line(float _thickness, std::array<float,3>  _rgb ,float _antiAliasing){
         geometry = glCreateShader(GL_GEOMETRY_SHADER);
         glShaderSource(geometry, 1, &gShaderCode, NULL);
         glCompileShader(geometry);
-        checkCompileErrors(fragment, "GEOMETRY");
+        checkCompileErrors(geometry, "GEOMETRY");
         // fragment Shader
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
@@ -237,10 +237,10 @@ Line::Line(float _thickness, std::array<float,3>  _rgb ,float _antiAliasing){
         initalized = true;
     }
 
-    model[0] = 1.0f;
-    model[1] = 0.0f;
-    model[2] = 1.0f;
-    model[3] = 0.0f;
+    model[0] = cos(_angle);
+    model[1] = sin(_angle);
+    model[2] = -sin(_angle);
+    model[3] = cos(_angle);
     thickness = _thickness;
     rgb = _rgb;
     antiAliasing = _antiAliasing;
@@ -263,19 +263,28 @@ Line::~Line(){
 }
 
 void Line::AddPoint(std::array<float,3> point){
-
+    points.push_back(point);
 }
 
 void Line::Build(){
-    points.insert(points.begin(), points.front());
-    points.insert(points.end(), points.back());
+    std::array<float, 3> first = (*points.begin());
+    std::array<float, 3> firstN = (*(points.begin()+1));
+    std::array<float, 3> firstDir{ first[0] - firstN[0] + first[0], first[1] - firstN[1] + first[1], first[2] - firstN[2] + first[2] };
+
+    std::array<float, 3> last = (*(points.end()-1));
+    std::array<float, 3> lastN = (*(points.end() - 2));
+    std::array<float, 3> lastDir{ last[0]-lastN[0]+ last[0], last[1] - lastN[1] + last[1], last[2] - lastN[2] + last[2] };
+
+    points.insert(points.begin(), firstDir);
+    
+    points.insert(points.end(), lastDir);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1,&VBO);
 
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points.size())*sizeof(float),points.data(),GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, points.size()*sizeof(std::array<float,3>),points.data(),GL_STATIC_DRAW);
 
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 3 * sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
@@ -292,6 +301,7 @@ void Line::Draw(unsigned int width, unsigned int height){
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
     glUniformMatrix2fv(glGetUniformLocation(ID, "model"),1,false,model.data());
+    glUniform3fv(glGetUniformLocation(ID, "color"), 1, rgb.data());
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, points.size());
 }

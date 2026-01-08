@@ -1,8 +1,10 @@
 
-
+#define _USE_MATH_DEFINES
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "src/basics.h"
+
+#include <cmath>
 
 #include <iostream>
 
@@ -51,8 +53,16 @@ int main()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
     std::array<float,3> point = std::array<float,3> {0.0f,0.0f,0.0f};
-    std::array<float,3> col = std::array<float,3> {0.0f,0.0f,0.0f};
-    Segment line = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
+    std::array<float,3> col = std::array<float,3> {0.1f,0.1f,0.1f};
+    Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
+    Line line = Line(M_PI* 0.0, 0.2f, col, 0.025f);
+    line.AddPoint(std::array<float, 3>{0.1f, 0.1f, 0.0f});
+    line.AddPoint(std::array<float, 3>{0.1f, 0.9f, 0.0f});
+    line.AddPoint(std::array<float, 3>{0.9f, 0.9f, 0.0f});
+    line.AddPoint(std::array<float, 3>{0.9f, -0.3f, 0.0f});
+    line.AddPoint(std::array<float, 3>{0.0f, -0.3f, 0.0f});
+    line.Build();
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -65,6 +75,7 @@ int main()
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        //segment.Draw(SCR_WIDTH, SCR_HEIGHT);
         line.Draw(SCR_WIDTH, SCR_HEIGHT);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)

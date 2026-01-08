@@ -39,7 +39,7 @@ struct Line {
     bool initalized = false;
     unsigned int ID;
 
-    Line(float thickness = 2, std::array<float, 3> rgb = std::array<float, 3>{ 0.0f,0.0f,0.0f }, float antiAliasing = 1.0f);
+    Line(float angle = 0, float thickness = 2, std::array<float, 3> rgb = std::array<float, 3>{ 0.0f,0.0f,0.0f }, float antiAliasing = 1.0f);
     void AddPoint(std::array<float,3> point);
     void Build();
     ~Line();
