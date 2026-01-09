@@ -17,20 +17,36 @@ set(CMAKE_CXX_STANDARD 17)
 file (GLOB PROJ_SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 #glad
-find_package(glad)
-include_directories(${PROJECT_SOURCE_DIR}/dep/glad/include)
-set (GLAD_SRC ${PROJECT_SOURCE_DIR}/dep/glad/src/glad.c)
+if(WIN32)
+    find_package(glad)
+else()
+    include_directories(${PROJECT_SOURCE_DIR}/dep/glad/include)
+    set (GLAD_SRC ${PROJECT_SOURCE_DIR}/dep/glad/src/glad.c)
+endif()
+
+
 #set (glad_DIR ${PROJECT_SOURCE_DIR}/dep/glad)
 
 #openGL
-find_package(glfw3 )
-include_directories("C:/Program Files/glfw/include/")
-link_directories ("C:/Program Files/glfw/lib-vc2022")
-find_package(OpenGL )
+if(WIN32)
+    include_directories("C:/Program Files/glfw/include/")
+    link_directories ("C:/Program Files/glfw/lib-vc2022")
+else()
+    find_package(glfw3 )
+    find_package(OpenGL )
+endif()
+
+
 
 #Free Type
-include_directories("C:/Program Files/freeType/include/")
-link_directories ("C:/Program Files/freeType/release_static/vs2015-2022/win64/")
+if(WIN32)
+    include_directories("C:/Program Files/freeType/include/")
+    link_directories ("C:/Program Files/freeType/release_static/vs2015-2022/win64/")
+else()
+    find_package(Freetype REQUIRED)
+endif()
+
+
 
 # Sources (adjust paths as needed)
 add_executable(${PROJECT_NAME} main.cpp ${GLAD_SRC} ${PROJ_SRC}) 
@@ -40,7 +56,12 @@ add_executable(${PROJECT_NAME} main.cpp ${GLAD_SRC} ${PROJ_SRC})
 
 #in
 
-target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw3 freetype)
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw3 freetype)
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw Freetype::Freetype)
+endif()
+
 
 add_compile_options(-fsanitize=address -fsanitize=undefined)
 add_link_options(-fsanitize=address -fsanitize=undefined)

@@ -4,8 +4,6 @@
 #include <sstream>
 #include <iostream>
 
-
-
 #include <ft2build.h>
 #include FT_FREETYPE_H  
 
@@ -166,6 +164,7 @@ void Segment::Draw(unsigned int width, unsigned int height){
     glUniform2fv(glGetUniformLocation(ID, "point"),1,point.data());
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 
@@ -310,6 +309,7 @@ void Line::Draw(unsigned int width, unsigned int height){
     glUniform3fv(glGetUniformLocation(ID, "color"), 1, rgb.data());
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, points.size());
+    glBindVertexArray(0);
 }
 
 
@@ -376,12 +376,11 @@ void TextRender::LoadChar(){
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             // now store character for later use
-            Character character = {
-                texture,
-                std::array<unsigned int, 2>{face->glyph->bitmap.width, face->glyph->bitmap.rows},
-                std::array<int, 2>{face->glyph->bitmap_left, face->glyph->bitmap_top},
-                static_cast<unsigned int>(face->glyph->advance.x)
-            };
+            Character character;
+            character.textureID = texture;
+            character.size = std::array<int, 2>{int(face->glyph->bitmap.width), int(face->glyph->bitmap.rows)};
+            character.bearing = std::array<int, 2>{face->glyph->bitmap_left, face->glyph->bitmap_top};
+            character.advance = static_cast<unsigned int>(face->glyph->advance.x);
             characters.insert(std::pair<char, Character>(c, character));
         }
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -457,24 +456,27 @@ TextRender::TextRender() {
 
     LoadChar();
 
+    proj = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+
 }
 void TextRender::Draw(std::string _text, std::array<float, 3>_rgb) {
-    float x = 0.0f;
+    float x = -1.0f;
     float y = 0.0f;
-    float scale = 1.0f;
+    float scale = 0.002f;
     glUseProgram(ID);
     glUniform3f(glGetUniformLocation(ID, "textColor"), _rgb[0], _rgb[1], _rgb[2]);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "projection"),1,false,proj.data());
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
+    
     // iterate through all characters
     std::string::const_iterator c;
     for (c = _text.begin(); c != _text.end(); c++)
     {
         Character ch = characters[*c];
-
         float xpos = x + ch.bearing[0] * scale;
-        float ypos = y - (ch.size[0] - ch.bearing[1]) * scale;
+        float ypos = y - (ch.size[1] - ch.bearing[1]) * scale;
 
         float w = ch.size[0] * scale;
         float h = ch.size[1] * scale;

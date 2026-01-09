@@ -51,7 +51,7 @@ struct Line {
 };
 struct Character {
     unsigned int textureID;
-    std::array<unsigned int, 2> size;
+    std::array<int, 2> size;
     std::array<int, 2> bearing;
     unsigned int advance;
 };
@@ -62,6 +62,7 @@ struct TextRender {
     unsigned int VAO;
     unsigned int VBO;
     unsigned int ID;
+    std::array<float, 16> proj;
     std::map<char, Character> characters;
 
     void LoadChar();

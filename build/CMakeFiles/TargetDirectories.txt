@@ -1,0 +1,3 @@
+/home/cesar/Code/Cpp/GraphicPlots/build/CMakeFiles/Plots.dir
+/home/cesar/Code/Cpp/GraphicPlots/build/CMakeFiles/edit_cache.dir
+/home/cesar/Code/Cpp/GraphicPlots/build/CMakeFiles/rebuild_cache.dir
