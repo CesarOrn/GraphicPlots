@@ -20,5 +20,4 @@ void main() {
 	}else{
 		gl_FragColor = vec4(color, 0.0);
 	}
-	
 }

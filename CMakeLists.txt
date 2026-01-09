@@ -28,6 +28,10 @@ include_directories("C:/Program Files/glfw/include/")
 link_directories ("C:/Program Files/glfw/lib-vc2022")
 find_package(OpenGL )
 
+#Free Type
+include_directories("C:/Program Files/freeType/include/")
+link_directories ("C:/Program Files/freeType/release_static/vs2015-2022/win64/")
+
 # Sources (adjust paths as needed)
 add_executable(${PROJECT_NAME} main.cpp ${GLAD_SRC} ${PROJ_SRC}) 
 
@@ -36,7 +40,7 @@ add_executable(${PROJECT_NAME} main.cpp ${GLAD_SRC} ${PROJ_SRC})
 
 #in
 
-target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw3 )
+target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw3 freetype)
 
 add_compile_options(-fsanitize=address -fsanitize=undefined)
 add_link_options(-fsanitize=address -fsanitize=undefined)

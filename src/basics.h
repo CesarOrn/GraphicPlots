@@ -4,6 +4,9 @@
 #include <glad/glad.h>
 #include <array>
 #include <vector>
+#include <string>
+#include <map>
+
 
 struct Segment{
     std::array<float,3> point;
@@ -45,6 +48,26 @@ struct Line {
     ~Line();
     void Draw(unsigned int width, unsigned int height);
 
+};
+struct Character {
+    unsigned int textureID;
+    std::array<unsigned int, 2> size;
+    std::array<int, 2> bearing;
+    unsigned int advance;
+};
+
+
+
+struct TextRender {
+    unsigned int VAO;
+    unsigned int VBO;
+    unsigned int ID;
+    std::map<char, Character> characters;
+
+    void LoadChar();
+
+    TextRender();
+    void Draw(std::string text, std::array<float, 3>_rgb);
 };
 
 #endif//PLOTSBASICS

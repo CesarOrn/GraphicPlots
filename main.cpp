@@ -63,6 +63,8 @@ int main()
     line.AddPoint(std::array<float, 3>{0.0f, -0.3f, 0.0f});
     line.Build();
 
+    TextRender txtRender;
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -76,7 +78,8 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         //segment.Draw(SCR_WIDTH, SCR_HEIGHT);
-        line.Draw(SCR_WIDTH, SCR_HEIGHT);
+        //line.Draw(SCR_WIDTH, SCR_HEIGHT);
+        txtRender.Draw("Captin Save a Hoe.",std::array<float,3>{ 0.3, 0.7f, 0.9f });
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
