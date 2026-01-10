@@ -1,5 +1,7 @@
 
 #define _USE_MATH_DEFINES
+#include <glm/glm.hpp>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "src/basics.h"
@@ -23,7 +25,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -40,7 +42,7 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+    glfwSwapInterval(1);
     // glad: load all OpenGL function pointers
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -52,15 +54,15 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
-    std::array<float,3> point = std::array<float,3> {0.0f,0.0f,0.0f};
-    std::array<float,3> col = std::array<float,3> {0.1f,0.1f,0.1f};
+    glm::vec3 point(0.0f,0.0f,0.0f );
+    glm::vec3 col(0.1f,0.1f,0.1f);
     Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
     Line line = Line(M_PI* 0.0, 0.2f, col, 0.025f);
-    line.AddPoint(std::array<float, 3>{0.1f, 0.1f, 0.0f});
-    line.AddPoint(std::array<float, 3>{0.1f, 0.9f, 0.0f});
-    line.AddPoint(std::array<float, 3>{0.9f, 0.9f, 0.0f});
-    line.AddPoint(std::array<float, 3>{0.9f, -0.3f, 0.0f});
-    line.AddPoint(std::array<float, 3>{0.0f, -0.3f, 0.0f});
+    line.AddPoint(glm::vec3(0.1f, 0.1f, 0.0f));
+    line.AddPoint(glm::vec3(0.1f, 0.9f, 0.0f));
+    line.AddPoint(glm::vec3(0.9f, 0.9f, 0.0f));
+    line.AddPoint(glm::vec3(0.9f, -0.3f, 0.0f));
+    line.AddPoint(glm::vec3(0.0f, -0.3f, 0.0f));
     line.Build();
 
     TextRender txtRender;
@@ -78,8 +80,9 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         //segment.Draw(SCR_WIDTH, SCR_HEIGHT);
-        //line.Draw(SCR_WIDTH, SCR_HEIGHT);
-        txtRender.Draw("Now is a, now is should I save her?",std::array<float,3>{ 0.3, 0.7f, 0.9f });
+        line.Draw(SCR_WIDTH, SCR_HEIGHT);
+        txtRender.Draw(glm::vec2(0.0f,0.85f),-M_PI/2,"Count", glm::vec3( 0.3, 0.7f, 0.9f ));
+        txtRender.Draw(glm::vec2(0.0f, -0.95f), 0.0f, "Value", glm::vec3(0.3, 0.7f, 0.9f));
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

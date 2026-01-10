@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iostream>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <ft2build.h>
 #include FT_FREETYPE_H  
 
@@ -50,7 +52,7 @@ void checkCompileErrors(unsigned int shader, std::string type)
     }
 
 
-Segment::Segment(std::array<float,3>  _p , float _length,float _angle, float _thickness, std::array<float,3>  _rgb ,float _antiAliasing){
+Segment::Segment(glm::vec3 _p , float _length,float _angle, float _thickness, glm::vec3 _rgb ,float _antiAliasing){
     if(!initalized){
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1,&VBO);
@@ -127,10 +129,13 @@ Segment::Segment(std::array<float,3>  _p , float _length,float _angle, float _th
     }
     point = _p;
     length = _length;
-    model[0] = cos(_angle);
-    model[1] = sin(_angle);
-    model[2] = -sin(_angle);
-    model[3] = cos(_angle);
+    model = glm::mat4(1.0f);
+    model[0][0] = cos(_angle);
+    model[0][1] = sin(_angle);
+    model[1][0] = -sin(_angle);
+    model[1][1] = cos(_angle);
+    model[2][2] = 1.0f;
+    model[3][3] = 1.0f;
     thickness = _thickness;
     rgb = _rgb;
     antiAliasing = _antiAliasing;
@@ -156,19 +161,19 @@ void Segment::Draw(unsigned int width, unsigned int height){
     glUseProgram(ID);
     resolution[0] = width;
     resolution[1] = height;
-    glUniform2fv(glGetUniformLocation(ID, "resolution"),1,resolution.data());
+    glUniform2fv(glGetUniformLocation(ID, "resolution"),1,&resolution[0]);
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
     glUniform1fv(glGetUniformLocation(ID, "len"),1,&length);
-    glUniformMatrix2fv(glGetUniformLocation(ID, "model"),1,false,model.data());
-    glUniform2fv(glGetUniformLocation(ID, "point"),1,point.data());
+    glUniformMatrix2fv(glGetUniformLocation(ID, "model"),1,false, &model[0][0]);
+    glUniform2fv(glGetUniformLocation(ID, "point"),1,&point[0]);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
 
-Line::Line(float _angle, float _thickness, std::array<float,3>  _rgb ,float _antiAliasing){
+Line::Line(float _angle, float _thickness, glm::vec3 _rgb ,float _antiAliasing){
     if(!initalized){
 
         std::string vertexCode;
@@ -241,11 +246,13 @@ Line::Line(float _angle, float _thickness, std::array<float,3>  _rgb ,float _ant
 
         initalized = true;
     }
-
-    model[0] = cos(_angle);
-    model[1] = sin(_angle);
-    model[2] = -sin(_angle);
-    model[3] = cos(_angle);
+    model = glm::mat4(1.0f);
+    model[0][0] = cos(_angle);
+    model[0][1] = sin(_angle);
+    model[1][0] = -sin(_angle);
+    model[1][1] = cos(_angle);
+    model[2][2] = 1.0f;
+    model[3][3] = 1.0f;
     thickness = _thickness;
     rgb = _rgb;
     antiAliasing = _antiAliasing;
@@ -267,18 +274,18 @@ Line::~Line(){
     }
 }
 
-void Line::AddPoint(std::array<float,3> point){
+void Line::AddPoint(glm::vec3 point){
     points.push_back(point);
 }
 
 void Line::Build(){
-    std::array<float, 3> first = (*points.begin());
-    std::array<float, 3> firstN = (*(points.begin()+1));
-    std::array<float, 3> firstDir{ first[0] - firstN[0] + first[0], first[1] - firstN[1] + first[1], first[2] - firstN[2] + first[2] };
+    glm::vec3 first = (*points.begin());
+    glm::vec3 firstN = (*(points.begin()+1));
+    glm::vec3 firstDir{ first[0] - firstN[0] + first[0], first[1] - firstN[1] + first[1], first[2] - firstN[2] + first[2] };
 
-    std::array<float, 3> last = (*(points.end()-1));
-    std::array<float, 3> lastN = (*(points.end() - 2));
-    std::array<float, 3> lastDir{ last[0]-lastN[0]+ last[0], last[1] - lastN[1] + last[1], last[2] - lastN[2] + last[2] };
+    glm::vec3 last = (*(points.end()-1));
+    glm::vec3 lastN = (*(points.end() - 2));
+    glm::vec3 lastDir{ last[0]-lastN[0]+ last[0], last[1] - lastN[1] + last[1], last[2] - lastN[2] + last[2] };
 
     points.insert(points.begin(), firstDir);
     
@@ -305,8 +312,8 @@ void Line::Draw(unsigned int width, unsigned int height){
     //glUniform2fv(glGetUniformLocation(ID, "resolution"),1,resolution.data());
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
-    glUniformMatrix2fv(glGetUniformLocation(ID, "model"),1,false,model.data());
-    glUniform3fv(glGetUniformLocation(ID, "color"), 1, rgb.data());
+    glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
+    glUniform3fv(glGetUniformLocation(ID, "color"), 1, &rgb[0]);
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, points.size());
     glBindVertexArray(0);
@@ -378,8 +385,8 @@ void TextRender::LoadChar(){
             // now store character for later use
             Character character;
             character.textureID = texture;
-            character.size = std::array<int, 2>{int(face->glyph->bitmap.width), int(face->glyph->bitmap.rows)};
-            character.bearing = std::array<int, 2>{face->glyph->bitmap_left, face->glyph->bitmap_top};
+            character.size = glm::ivec2{int(face->glyph->bitmap.width), int(face->glyph->bitmap.rows)};
+            character.bearing = glm::ivec2{face->glyph->bitmap_left, face->glyph->bitmap_top};
             character.advance = static_cast<unsigned int>(face->glyph->advance.x);
             characters.insert(std::pair<char, Character>(c, character));
         }
@@ -459,19 +466,32 @@ TextRender::TextRender() {
     proj = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 
 }
-void TextRender::Draw(std::string _text, std::array<float, 3>_rgb) {
-    float x = -1.0f;
+void TextRender::Draw(glm::vec2 pos, float rotation, std::string _text, glm::vec3 _rgb) {
+    float textCenter = 0.0f;
+    float x = 0.0f;
     float y = 0.0f;
-    float scale = 0.002f;
+    float scale = 0.003f;
+
+    std::string::const_iterator c;
+    for (c = _text.begin(); c != _text.end(); c++)
+    {
+        Character ch = characters[*c];
+        textCenter = textCenter + (float((ch.advance >> 6)) * scale)/4.0f;
+    }
+
+    x = x - textCenter;
+
+    model = glm::translate(glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, -1)), glm::vec3(pos.x - textCenter, pos.y, 0));
+
     glUseProgram(ID);
-    glUniform3f(glGetUniformLocation(ID, "textColor"), _rgb[0], _rgb[1], _rgb[2]);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "projection"),1,false,proj.data());
+    glUniform3f(glGetUniformLocation(ID, "textColor"), _rgb.r, _rgb.g, _rgb.b);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
     
     // iterate through all characters
-    std::string::const_iterator c;
+    //std::string::const_iterator c;
     for (c = _text.begin(); c != _text.end(); c++)
     {
         Character ch = characters[*c];

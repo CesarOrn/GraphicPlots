@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/Plots.dir/main.cpp.o CMakeFiles/Plots.dir/dep/glad/src/glad.c.o CMakeFiles/Plots.dir/src/basics.cpp.o -o Plots  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 

@@ -17,23 +17,22 @@ set(CMAKE_CXX_STANDARD 17)
 file (GLOB PROJ_SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 #glad
-if(WIN32)
-    find_package(glad)
-else()
-    include_directories(${PROJECT_SOURCE_DIR}/dep/glad/include)
-    set (GLAD_SRC ${PROJECT_SOURCE_DIR}/dep/glad/src/glad.c)
-endif()
+include_directories(${PROJECT_SOURCE_DIR}/dep/glad/include)
+set (GLAD_SRC ${PROJECT_SOURCE_DIR}/dep/glad/src/glad.c)
 
+#GLM (Didn't want to add this but should shorten development.)
+include_directories("C:/Users/Cesar/eclipse-workspace/Plots/dep/glm")
 
 #set (glad_DIR ${PROJECT_SOURCE_DIR}/dep/glad)
 
 #openGL
 if(WIN32)
+    find_package(OpenGL )
     include_directories("C:/Program Files/glfw/include/")
     link_directories ("C:/Program Files/glfw/lib-vc2022")
 else()
-    find_package(glfw3 )
     find_package(OpenGL )
+    find_package(glfw3 )
 endif()
 
 
