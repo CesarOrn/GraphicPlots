@@ -2,6 +2,7 @@
 
 uniform float antialias;
 uniform float thickness;
+uniform mat4 mvp;
 
 layout (lines_adjacency) in;
 layout (triangle_strip, max_vertices = 6) out;
@@ -25,24 +26,24 @@ void main(){
 	float dy0 = width/ dot(m0,n1);
 	float dy1 = width/ dot(m1,n2);
 
-	gl_Position  =  vec4(gl_in[1].gl_Position.xy + m0 * dy0, 0.0, 1.0);
+	gl_Position  =  mvp * vec4(gl_in[1].gl_Position.xy + m0 * dy0, 0.0, 1.0);
 	uv = vec2(0,width);
 	EmitVertex();
-	gl_Position  =  vec4(gl_in[2].gl_Position.xy + m1 * dy1, 0.0, 1.0);
+	gl_Position  =  mvp * vec4(gl_in[2].gl_Position.xy + m1 * dy1, 0.0, 1.0);
 	uv = vec2(0,width);
 	EmitVertex();
-	gl_Position  =  vec4(gl_in[1].gl_Position.xy - m0 * dy0, 0.0, 1.0);
+	gl_Position  =  mvp * vec4(gl_in[1].gl_Position.xy - m0 * dy0, 0.0, 1.0);
 	uv = vec2(0,-width);
 	EmitVertex();
 	EndPrimitive();
 
-	gl_Position  =  vec4(gl_in[2].gl_Position.xy + m1 * dy1, 0.0, 1.0);
+	gl_Position  =  mvp * vec4(gl_in[2].gl_Position.xy + m1 * dy1, 0.0, 1.0);
 	uv = vec2(0,width);
 	EmitVertex();
-	gl_Position  =  vec4(gl_in[2].gl_Position.xy - m1 * dy1, 0.0, 1.0);
+	gl_Position  =  mvp * vec4(gl_in[2].gl_Position.xy - m1 * dy1, 0.0, 1.0);
 	uv = vec2(0,-width);
 	EmitVertex();
-	gl_Position  =  vec4(gl_in[1].gl_Position.xy - m0 * dy0, 0.0, 1.0);
+	gl_Position  =  mvp * vec4(gl_in[1].gl_Position.xy - m0 * dy0, 0.0, 1.0);
 	uv = vec2(0,-width);
 	EmitVertex();
 	EndPrimitive();

@@ -304,11 +304,13 @@ void Line::Build(){
 }
 
 void Line::Draw(glm::mat4 viewProj){
+
+    glm::mat4 mvp = viewProj * model;
+
     glUseProgram(ID);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &viewProj[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
     glUniform3fv(glGetUniformLocation(ID, "color"), 1, &rgb[0]);
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, points.size());

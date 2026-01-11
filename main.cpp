@@ -58,15 +58,13 @@ int main()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
     glm::vec3 point(0.0f,0.0f,0.0f );
-    glm::vec3 col(0.1f,0.1f,0.1f);
+    glm::vec3 col(0.10f,0.10f,0.10f);
     Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
-    Line line = Line(M_PI* 0.0, 0.2f, col, 0.025f);
-    line.AddPoint(glm::vec3(0.1f, 0.1f, 0.0f));
-    line.AddPoint(glm::vec3(0.1f, 0.9f, 0.0f));
-    line.AddPoint(glm::vec3(0.9f, 0.9f, 0.0f));
-    line.AddPoint(glm::vec3(0.9f, -0.3f, 0.0f));
-    line.AddPoint(glm::vec3(0.0f, -0.3f, 0.0f));
-    line.Build();
+    Line axis = Line(M_PI* 0.0, 0.01f, col, 0.002f);
+    axis.AddPoint(glm::vec3(-0.80f, 0.90f, 0.0f));
+    axis.AddPoint(glm::vec3(-0.80f, -0.80f, 0.0f));
+    axis.AddPoint(glm::vec3(0.85f, -0.80f, 0.0f));
+    axis.Build();
 
     LineArea lineA = LineArea(M_PI* 0.0, 0.2f, col, 0.025f);
     for(int i = 0; i < 100; i++){
@@ -89,13 +87,13 @@ int main()
 
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         //segment.Draw(proj);
-        line.Draw(proj);
+        axis.Draw(proj);
+        lineA.Draw(proj);
         txtRender.Draw(proj,glm::vec2(0.0f,0.85f),-M_PI/2,"Count", glm::vec3( 0.3, 0.7f, 0.9f ));
         txtRender.Draw(proj,glm::vec2(0.0f, -0.95f), 0.0f, "Value", glm::vec3(0.3, 0.7f, 0.9f));
-        lineA.Draw(proj);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
