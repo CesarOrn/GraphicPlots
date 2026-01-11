@@ -296,7 +296,7 @@ void Line::Build(){
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, points.size()*sizeof(std::array<float,3>),points.data(),GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, points.size()*sizeof(glm::vec3),points.data(),GL_STATIC_DRAW);
 
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 3 * sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
@@ -320,6 +320,140 @@ void Line::Draw(unsigned int width, unsigned int height){
 }
 
 
+LineArea::LineArea(float _angle, float _thickness, glm::vec3 _rgb ,float _antiAliasing){
+    if(!initalized){
+
+        std::string vertexCode;
+        std::string fragmentCode;
+        std::string geometryCode;
+        std::ifstream vShaderFile;
+        std::ifstream fShaderFile;
+        std::ifstream gShaderFile;
+        // ensure ifstream objects can throw exceptions:
+        vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        gShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        try 
+        {
+            std::cout << "Hello" << std::endl;
+            // open files
+            vShaderFile.open("../shaders/AreaVertex.vs");
+            fShaderFile.open("../shaders/AreaFragment.fs");
+            gShaderFile.open("../shaders/AreaGeometry.gs");
+            std::stringstream vShaderStream, fShaderStream, gShaderStream;
+            // read file's buffer contents into streams
+            vShaderStream << vShaderFile.rdbuf();
+            fShaderStream << fShaderFile.rdbuf();
+            gShaderStream << gShaderFile.rdbuf();
+            // close file handlers
+            vShaderFile.close();
+            fShaderFile.close();
+            gShaderFile.close();
+            // convert stream into string
+            vertexCode   = vShaderStream.str();
+            fragmentCode = fShaderStream.str();
+            geometryCode = gShaderStream.str();
+        }
+        catch (std::ifstream::failure& e)
+        {
+            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+        }
+        const char* vShaderCode = vertexCode.c_str();
+        const char * fShaderCode = fragmentCode.c_str();
+        const char * gShaderCode = geometryCode.c_str();
+        // 2. compile shaders
+        unsigned int vertex, fragment, geometry;
+        // vertex shader
+        vertex = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex, 1, &vShaderCode, NULL);
+        glCompileShader(vertex);
+        checkCompileErrors(vertex, "VERTEX");
+         // fragment Shader
+        geometry = glCreateShader(GL_GEOMETRY_SHADER);
+        glShaderSource(geometry, 1, &gShaderCode, NULL);
+        glCompileShader(geometry);
+        checkCompileErrors(geometry, "GEOMETRY");
+        // fragment Shader
+        fragment = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment, 1, &fShaderCode, NULL);
+        glCompileShader(fragment);
+        checkCompileErrors(fragment, "FRAGMENT");
+        // shader Program
+        ID = glCreateProgram();
+        glAttachShader(ID, vertex);
+        glAttachShader(ID, geometry);
+        glAttachShader(ID, fragment);
+        glLinkProgram(ID);
+        checkCompileErrors(ID, "PROGRAM");
+        // delete the shaders as they're linked into our program now and no longer necessary
+        glDeleteShader(vertex);
+        glDeleteShader(fragment);
+        glDeleteShader(geometry);
+
+
+        initalized = true;
+    }
+    model = glm::mat4(1.0f);
+    model[0][0] = cos(_angle);
+    model[0][1] = sin(_angle);
+    model[1][0] = -sin(_angle);
+    model[1][1] = cos(_angle);
+    model[2][2] = 1.0f;
+    model[3][3] = 1.0f;
+    thickness = _thickness;
+    rgb = _rgb;
+    antiAliasing = _antiAliasing;
+}
+
+//Line::Line(std::array<float,3> p1, std::array<float,3> p2, float thickness, std::array<float,3> rgb,float antiAliasing){
+//    float rot =std::acos((p1[0] * p2[0] + p1[1] * p2[1] + p1[2] * p2[2])/(std::sqrt(p1[0] * p1[0] + p1[1] * p1[1] + p1[2]*p1[2]) *std::sqrt(p1[0] * p2[0] + p2[1] * p2[1] + p2[2]*p2[2])));
+//    float dis = std::sqrt((p2[0]-p1[0])*(p2[0]-p1[0]) + (p2[1]-p1[1])*(p2[1]-p1[1]) + (p2[2]-p1[2])*(p2[2]-p1[2]));
+//    Line(p1,dis,rot, thickness,rgb, antiAliasing);
+//}
+
+LineArea::~LineArea(){
+    if(initalized){
+        glDeleteVertexArrays(1,&VAO);
+        glDeleteBuffers(1,&VBO);
+        //glDeleteBuffers(1,&EBO);
+        glDeleteProgram(ID);
+        initalized = false;
+    }
+}
+
+void LineArea::AddPoint(glm::vec3 point){
+    points.push_back(point);
+}
+
+void LineArea::Build(){
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1,&VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, points.size()*sizeof(glm::vec3),points.data(),GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 3 * sizeof(float),(void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindVertexArray(0);
+}
+
+void LineArea::Draw(unsigned int width, unsigned int height){
+    glUseProgram(ID);
+    resolution[0] = width;
+    resolution[1] = height;
+    //glUniform2fv(glGetUniformLocation(ID, "resolution"),1,resolution.data());
+    glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
+    glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
+    glUniform3fv(glGetUniformLocation(ID, "color"), 1, &rgb[0]);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_LINE_STRIP, 0, points.size());
+    glBindVertexArray(0);
+}
 
 void TextRender::LoadChar(){
     // FreeType

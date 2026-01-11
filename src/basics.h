@@ -48,8 +48,31 @@ struct Line {
     void Build();
     ~Line();
     void Draw(unsigned int width, unsigned int height);
-
 };
+
+/*
+*
+*/
+struct LineArea{
+    std::vector<glm::vec3> points;
+    glm::mat4 model;
+    float thickness;
+    glm::vec3 rgb;
+    glm::vec2 resolution;
+    float antiAliasing;
+    unsigned int VAO;
+    unsigned int VBO;
+    unsigned int EBO;
+    bool initalized = false;
+    unsigned int ID;
+
+    LineArea(float angle = 0, float thickness = 2, glm::vec3 rgb = glm::vec3( 0.0f,0.0f,0.0f ), float antiAliasing = 1.0f);
+    void AddPoint(glm::vec3 point);
+    void Build();
+    ~LineArea();
+    void Draw(unsigned int width, unsigned int height);
+};
+
 struct Character {
     unsigned int textureID;
     glm::ivec2 size;

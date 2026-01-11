@@ -65,6 +65,12 @@ int main()
     line.AddPoint(glm::vec3(0.0f, -0.3f, 0.0f));
     line.Build();
 
+    LineArea lineA = LineArea(M_PI* 0.0, 0.2f, col, 0.025f);
+    for(int i = 0; i < 100; i++){
+        lineA.AddPoint(glm::vec3((i* 2*M_PI/100)/6-0.5,cos(i* 2*M_PI/100),0.0f ));
+    }
+    lineA.Build();
+
     TextRender txtRender;
 
     // render loop
@@ -80,10 +86,10 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         //segment.Draw(SCR_WIDTH, SCR_HEIGHT);
-        line.Draw(SCR_WIDTH, SCR_HEIGHT);
-        txtRender.Draw(glm::vec2(0.0f,0.85f),-M_PI/2,"Count", glm::vec3( 0.3, 0.7f, 0.9f ));
-        txtRender.Draw(glm::vec2(0.0f, -0.95f), 0.0f, "Value", glm::vec3(0.3, 0.7f, 0.9f));
-
+        //line.Draw(SCR_WIDTH, SCR_HEIGHT);
+        //txtRender.Draw(glm::vec2(0.0f,0.85f),-M_PI/2,"Count", glm::vec3( 0.3, 0.7f, 0.9f ));
+        //txtRender.Draw(glm::vec2(0.0f, -0.95f), 0.0f, "Value", glm::vec3(0.3, 0.7f, 0.9f));
+        lineA.Draw(SCR_WIDTH, SCR_HEIGHT);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
