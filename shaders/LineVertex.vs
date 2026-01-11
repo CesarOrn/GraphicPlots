@@ -2,7 +2,7 @@
 uniform vec2 resolution;
 uniform float antialias;
 uniform float thickness;
-uniform mat4 model;
+uniform mat4 mvp;
 
 layout (location = 0) in vec3 p;
 
@@ -10,6 +10,5 @@ layout (location = 0) in vec3 p;
 //out vec2 v_p0, v_p1, v_p;
 
 void main() {
-    vec4 pTrans = model * vec4(p,1.0);
-    gl_Position = vec4(pTrans.xy, 0.0, 1.0);
+    gl_Position = mvp * vec4(p, 1.0);
 }

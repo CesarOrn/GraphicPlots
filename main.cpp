@@ -1,6 +1,7 @@
 
 #define _USE_MATH_DEFINES
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -16,6 +17,8 @@ void processInput(GLFWwindow *window);
 // settings
 unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
+
+glm::mat4 proj(1.0f);
 
 int main()
 {
@@ -73,6 +76,9 @@ int main()
 
     TextRender txtRender;
 
+    glm::mat4 view(1.0f);
+    
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -85,11 +91,11 @@ int main()
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        //segment.Draw(SCR_WIDTH, SCR_HEIGHT);
-        //line.Draw(SCR_WIDTH, SCR_HEIGHT);
-        //txtRender.Draw(glm::vec2(0.0f,0.85f),-M_PI/2,"Count", glm::vec3( 0.3, 0.7f, 0.9f ));
-        //txtRender.Draw(glm::vec2(0.0f, -0.95f), 0.0f, "Value", glm::vec3(0.3, 0.7f, 0.9f));
-        lineA.Draw(SCR_WIDTH, SCR_HEIGHT);
+        //segment.Draw(proj);
+        line.Draw(proj);
+        txtRender.Draw(proj,glm::vec2(0.0f,0.85f),-M_PI/2,"Count", glm::vec3( 0.3, 0.7f, 0.9f ));
+        txtRender.Draw(proj,glm::vec2(0.0f, -0.95f), 0.0f, "Value", glm::vec3(0.3, 0.7f, 0.9f));
+        lineA.Draw(proj);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -119,5 +125,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     SCR_WIDTH = width;
     SCR_HEIGHT= height;
     glViewport(0, 0, width, height);
+    float aspectRatio = (float)width / (float)height;
+    if (aspectRatio >=1) {
+        proj = glm::ortho(-aspectRatio, aspectRatio, -1.0f, 1.0f, 0.0f, 1.0f);
+    }
+    else {
+        proj = glm::ortho(-1.0f, 1.0f, 1.0f/-aspectRatio, 1.0f / aspectRatio, 0.0f, 1.0f);
+    }
+    //
+    //proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
 }
 

@@ -21,7 +21,7 @@ include_directories(${PROJECT_SOURCE_DIR}/dep/glad/include)
 set (GLAD_SRC ${PROJECT_SOURCE_DIR}/dep/glad/src/glad.c)
 
 #GLM (Didn't want to add this but should shorten development.)
-include_directories("C:/Users/Cesar/eclipse-workspace/Plots/dep/glm")
+include_directories(${PROJECT_SOURCE_DIR}/dep/glm)
 
 #set (glad_DIR ${PROJECT_SOURCE_DIR}/dep/glad)
 

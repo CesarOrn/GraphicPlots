@@ -27,7 +27,7 @@ struct Segment{
     Segment(glm::vec3 p , float length,float angle, float thickness = 2, glm::vec3 rgb = glm::vec3(0.0f,0.0f,0.0f) ,float antiAliasing = 1.0f);
     //Line(std::array<float,3> p1, std::array<float,3> p2, float thickness = 2, std::array<float,3> rgb = std::array<float,3>{0.0f,0.0f,0.0f} ,float antiAliasing = 1.0f);
     ~Segment();
-    void Draw(unsigned int width, unsigned int height);
+    void Draw(glm::mat4 viewProj);
 };
 
 struct Line {
@@ -47,7 +47,7 @@ struct Line {
     void AddPoint(glm::vec3 point);
     void Build();
     ~Line();
-    void Draw(unsigned int width, unsigned int height);
+    void Draw(glm::mat4 viewProj);
 };
 
 /*
@@ -70,7 +70,7 @@ struct LineArea{
     void AddPoint(glm::vec3 point);
     void Build();
     ~LineArea();
-    void Draw(unsigned int width, unsigned int height);
+    void Draw(glm::mat4 viewProj);
 };
 
 struct Character {
@@ -93,7 +93,27 @@ struct TextRender {
     void LoadChar();
 
     TextRender();
-    void Draw(glm::vec2 pos, float rotation, std::string text, glm::vec3 rgb);
+    void Draw(glm::mat4 viewProj, glm::vec2 pos, float rotation, std::string text, glm::vec3 rgb);
+};
+
+struct Figure {
+    std::string xLabel;
+    std::string yLabel;
+    std::string zLabel;
+    std::string title;
+
+    std::vector<float> xTics;
+    std::vector<float> yTics;
+    std::vector<float> zTics;
+
+    //m
+    float minX;
+    float minY;
+    float minZ;
+
+    float maxX;
+    float maxY;
+    float maxZ;
 };
 
 #endif//PLOTSBASICS

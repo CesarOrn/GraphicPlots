@@ -157,11 +157,9 @@ Segment::~Segment(){
     }
 }
 
-void Segment::Draw(unsigned int width, unsigned int height){
+void Segment::Draw(glm::mat4 viewProj){
     glUseProgram(ID);
-    resolution[0] = width;
-    resolution[1] = height;
-    glUniform2fv(glGetUniformLocation(ID, "resolution"),1,&resolution[0]);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"),1,false, &viewProj[0][0]);
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
     glUniform1fv(glGetUniformLocation(ID, "len"),1,&length);
@@ -305,11 +303,9 @@ void Line::Build(){
     glBindVertexArray(0);
 }
 
-void Line::Draw(unsigned int width, unsigned int height){
+void Line::Draw(glm::mat4 viewProj){
     glUseProgram(ID);
-    resolution[0] = width;
-    resolution[1] = height;
-    //glUniform2fv(glGetUniformLocation(ID, "resolution"),1,resolution.data());
+    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &viewProj[0][0]);
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
@@ -441,11 +437,9 @@ void LineArea::Build(){
     glBindVertexArray(0);
 }
 
-void LineArea::Draw(unsigned int width, unsigned int height){
+void LineArea::Draw(glm::mat4 viewProj){
     glUseProgram(ID);
-    resolution[0] = width;
-    resolution[1] = height;
-    //glUniform2fv(glGetUniformLocation(ID, "resolution"),1,resolution.data());
+    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &viewProj[0][0]);
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
@@ -600,7 +594,7 @@ TextRender::TextRender() {
     proj = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 
 }
-void TextRender::Draw(glm::vec2 pos, float rotation, std::string _text, glm::vec3 _rgb) {
+void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, std::string _text, glm::vec3 _rgb) {
     float textCenter = 0.0f;
     float x = 0.0f;
     float y = 0.0f;
@@ -616,10 +610,10 @@ void TextRender::Draw(glm::vec2 pos, float rotation, std::string _text, glm::vec
     x = x - textCenter;
 
     model = glm::translate(glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, -1)), glm::vec3(pos.x - textCenter, pos.y, 0));
-
+    glm::mat4 mvp = viewProj * model;
     glUseProgram(ID);
     glUniform3f(glGetUniformLocation(ID, "textColor"), _rgb.r, _rgb.g, _rgb.b);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"),1,false,&mvp[0][0]);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
