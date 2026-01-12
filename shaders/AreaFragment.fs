@@ -2,7 +2,7 @@
 
 uniform float antialias;
 uniform float thickness;
-uniform vec3 color;
+uniform vec4 color;
 
 out vec4 FragColor;
 
@@ -10,6 +10,6 @@ in vec2 uv;
 
 void main() {
 
-	gl_FragColor = vec4(color, 1.0);
+	gl_FragColor = color;
 
 }

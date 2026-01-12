@@ -2,7 +2,7 @@
 
 uniform float antialias;
 uniform float thickness;
-uniform vec3 color;
+uniform vec4 color;
 
 out vec4 FragColor;
 
@@ -13,11 +13,11 @@ void main() {
 
 	float d = abs(uv.y) - width;
 	if(d < 0){
-		gl_FragColor = vec4(color, 1.0);
+		gl_FragColor = vec4(color.rgb, 1.0);
 	}else if(d < antialias){
 		d = 1-d/antialias;
-		gl_FragColor = vec4(color, d*d);
+		gl_FragColor = vec4(color.rgb, d*d);
 	}else{
-		gl_FragColor = vec4(color, 0.0);
+		gl_FragColor = vec4(color.rgb, 0.0);
 	}
 }

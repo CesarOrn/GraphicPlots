@@ -52,7 +52,7 @@ void checkCompileErrors(unsigned int shader, std::string type)
     }
 
 
-Segment::Segment(glm::vec3 _p , float _length,float _angle, float _thickness, glm::vec3 _rgb ,float _antiAliasing){
+Segment::Segment(glm::vec3 _p , float _length,float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
     if(!initalized){
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1,&VBO);
@@ -137,7 +137,7 @@ Segment::Segment(glm::vec3 _p , float _length,float _angle, float _thickness, gl
     model[2][2] = 1.0f;
     model[3][3] = 1.0f;
     thickness = _thickness;
-    rgb = _rgb;
+    rgba = _rgba;
     antiAliasing = _antiAliasing;
 }
 
@@ -171,7 +171,7 @@ void Segment::Draw(glm::mat4 viewProj){
 }
 
 
-Line::Line(float _angle, float _thickness, glm::vec3 _rgb ,float _antiAliasing){
+Line::Line(float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
     if(!initalized){
 
         std::string vertexCode;
@@ -252,7 +252,7 @@ Line::Line(float _angle, float _thickness, glm::vec3 _rgb ,float _antiAliasing){
     model[2][2] = 1.0f;
     model[3][3] = 1.0f;
     thickness = _thickness;
-    rgb = _rgb;
+    rgba = _rgba;
     antiAliasing = _antiAliasing;
 }
 
@@ -311,14 +311,14 @@ void Line::Draw(glm::mat4 viewProj){
     glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
-    glUniform3fv(glGetUniformLocation(ID, "color"), 1, &rgb[0]);
+    glUniform4fv(glGetUniformLocation(ID, "color"), 1, &rgba[0]);
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, points.size());
     glBindVertexArray(0);
 }
 
 
-LineArea::LineArea(float _angle, float _thickness, glm::vec3 _rgb ,float _antiAliasing){
+LineArea::LineArea(float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
     if(!initalized){
 
         std::string vertexCode;
@@ -399,7 +399,7 @@ LineArea::LineArea(float _angle, float _thickness, glm::vec3 _rgb ,float _antiAl
     model[2][2] = 1.0f;
     model[3][3] = 1.0f;
     thickness = _thickness;
-    rgb = _rgb;
+    rgba = _rgba;
     antiAliasing = _antiAliasing;
 }
 
@@ -445,7 +445,7 @@ void LineArea::Draw(glm::mat4 viewProj){
     glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
     glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
-    glUniform3fv(glGetUniformLocation(ID, "color"), 1, &rgb[0]);
+    glUniform4fv(glGetUniformLocation(ID, "color"), 1, &rgba[0]);
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP, 0, points.size());
     glBindVertexArray(0);
@@ -596,11 +596,10 @@ TextRender::TextRender() {
     proj = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 
 }
-void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, std::string _text, glm::vec3 _rgb) {
+void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, float scale, std::string _text, glm::vec4 _rgba) {
     float textCenter = 0.0f;
     float x = 0.0f;
     float y = 0.0f;
-    float scale = 0.003f;
 
     std::string::const_iterator c;
     for (c = _text.begin(); c != _text.end(); c++)
@@ -614,7 +613,7 @@ void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, std::str
     model = glm::translate(glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, -1)), glm::vec3(pos.x - textCenter, pos.y, 0));
     glm::mat4 mvp = viewProj * model;
     glUseProgram(ID);
-    glUniform3f(glGetUniformLocation(ID, "textColor"), _rgb.r, _rgb.g, _rgb.b);
+    glUniform4f(glGetUniformLocation(ID, "textColor"), _rgba.r, _rgba.g, _rgba.b,_rgba.a);
     glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"),1,false,&mvp[0][0]);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
@@ -654,4 +653,51 @@ void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, std::str
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+Figure::Figure(){
+    TextRender txtRender = TextRender();
+    xLabelScale = 0.003f;
+    yLabelScale = 0.003f;
+    zLabelScale = 0.003f;
+}
+
+Figure::~Figure(){
+
+}
+
+void Figure::SetTitle(std::string title){
+
+}
+
+void Figure::SetXLabel(std::string _xLabel){
+    xLabel = _xLabel;
+}
+
+void Figure::SetYLabel(std::string _yLabel){
+    yLabel = _yLabel;
+}
+
+void Figure::SetZLabel(std::string _zLabel){
+    zLabel = _zLabel;
+}
+
+void Figure::SetTextScale(float scale){
+    xLabelScale = scale;
+    yLabelScale = scale;
+    zLabelScale = scale;
+}
+
+void Figure::LineArea(std::vector<glm::vec2> points){
+
+}
+
+void Figure::Hist(){
+
+}
+
+void Figure::Draw(glm::mat4 proj){
+    txtRender.Draw(proj,glm::vec2(0.0f,0.85f),-M_PI/2,yLabelScale,yLabel, glm::vec4( 0.10f, 0.10f, 0.10f,1.0f));
+    txtRender.Draw(proj,glm::vec2(0.0f, -0.95f), 0.0f,xLabelScale,xLabel, glm::vec4(0.10f, 0.10f, 0.10f,1.0f));
 }
