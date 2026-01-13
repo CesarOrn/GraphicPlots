@@ -24,6 +24,9 @@ unsigned int indices[] = {  // note that we start from 0!
     0, 2, 3   // second Triangle
 };
 
+
+
+
 //unsigned int Line::VAO = 0;
 //unsigned int Line::VBO = 0;
 //unsigned int Line::EBO = 0;
@@ -31,105 +34,194 @@ unsigned int indices[] = {  // note that we start from 0!
 //unsigned int Line::shader = 0;
 
 void checkCompileErrors(unsigned int shader, std::string type)
+{
+    int success;
+    char infoLog[1024];
+    if (type != "PROGRAM")
     {
-        int success;
-        char infoLog[1024];
-        if (type != "PROGRAM")
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (!success)
         {
-            glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-            if (!success)
-            {
-                glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-            }
-        }
-        else
-        {
-            glGetProgramiv(shader, GL_LINK_STATUS, &success);
-            if (!success)
-            {
-                glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-            }
+            glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+            std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
     }
-
-
-Segment::Segment(glm::vec3 _p , float _length,float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
-    if(!initalized){
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1,&VBO);
-        glGenBuffers(1,&EBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(uvs),uvs,GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices),indices,GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE, 2 * sizeof(float),(void*)0);
-        glEnableVertexAttribArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0); 
-        glBindVertexArray(0);
-
-        std::string vertexCode;
-        std::string fragmentCode;
-        std::ifstream vShaderFile;
-        std::ifstream fShaderFile;
-        // ensure ifstream objects can throw exceptions:
-        vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        try 
+    else
+    {
+        glGetProgramiv(shader, GL_LINK_STATUS, &success);
+        if (!success)
         {
-            std::cout << "Hello" << std::endl;
-            // open files
-            vShaderFile.open("../shaders/SegmentVertex.vs");
-            fShaderFile.open("../shaders/SegmentFragment.fs");
-            std::stringstream vShaderStream, fShaderStream;
-            // read file's buffer contents into streams
-            vShaderStream << vShaderFile.rdbuf();
-            fShaderStream << fShaderFile.rdbuf();
-            // close file handlers
-            vShaderFile.close();
-            fShaderFile.close();
-            // convert stream into string
-            vertexCode   = vShaderStream.str();
-            fragmentCode = fShaderStream.str();
+            glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+            std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
-        catch (std::ifstream::failure& e)
-        {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
-        }
-        const char* vShaderCode = vertexCode.c_str();
-        const char * fShaderCode = fragmentCode.c_str();
-        // 2. compile shaders
-        unsigned int vertex, fragment;
-        // vertex shader
-        vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, &vShaderCode, NULL);
-        glCompileShader(vertex);
-        checkCompileErrors(vertex, "VERTEX");
+    }
+}
+
+
+
+
+Shader::Shader(){
+}
+
+
+void Shader::Load(std::string vertexPath, std::string fragmentPath, std::string geometryPath){
+    std::string vertexCode;
+    std::string fragmentCode;
+    std::string geometryCode;
+    std::ifstream vShaderFile;
+    std::ifstream fShaderFile;
+    std::ifstream gShaderFile;
+    // ensure ifstream objects can throw exceptions:
+    vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    gShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    try 
+    {
+        std::cout << "Hello" << std::endl;
+        // open files
+        vShaderFile.open(vertexPath.c_str());
+        fShaderFile.open(fragmentPath.c_str());
+        gShaderFile.open(geometryPath.c_str());
+        
+        std::stringstream vShaderStream, fShaderStream, gShaderStream;
+        // read file's buffer contents into streams
+        vShaderStream << vShaderFile.rdbuf();
+        fShaderStream << fShaderFile.rdbuf();
+        gShaderStream << gShaderFile.rdbuf();
+        // close file handlers
+        vShaderFile.close();
+        fShaderFile.close();
+        gShaderFile.close();
+        // convert stream into string
+        vertexCode   = vShaderStream.str();
+        fragmentCode = fShaderStream.str();
+        geometryCode = gShaderStream.str();
+    }
+    catch (std::ifstream::failure& e)
+    {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+    }
+    const char* vShaderCode = vertexCode.c_str();
+    const char * fShaderCode = fragmentCode.c_str();
+    const char * gShaderCode = geometryCode.c_str();
+    // 2. compile shaders
+    unsigned int vertex, fragment, geometry;
+    // vertex shader
+    vertex = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex, 1, &vShaderCode, NULL);
+    glCompileShader(vertex);
+    checkCompileErrors(vertex, "VERTEX");
         // fragment Shader
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
-        glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
-        // shader Program
-        ID = glCreateProgram();
-        glAttachShader(ID, vertex);
-        glAttachShader(ID, fragment);
-        glLinkProgram(ID);
-        checkCompileErrors(ID, "PROGRAM");
-        // delete the shaders as they're linked into our program now and no longer necessary
-        glDeleteShader(vertex);
-        glDeleteShader(fragment);
+    geometry = glCreateShader(GL_GEOMETRY_SHADER);
+    glShaderSource(geometry, 1, &gShaderCode, NULL);
+    glCompileShader(geometry);
+    checkCompileErrors(geometry, "GEOMETRY");
+    // fragment Shader
+    fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment, 1, &fShaderCode, NULL);
+    glCompileShader(fragment);
+    checkCompileErrors(fragment, "FRAGMENT");
+    // shader Program
+    ID = glCreateProgram();
+    glAttachShader(ID, vertex);
+    glAttachShader(ID, geometry);
+    glAttachShader(ID, fragment);
+    glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
+    // delete the shaders as they're linked into our program now and no longer necessary
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+    glDeleteShader(geometry);
+    std::cout << "Create Full Shader: " << ID << std::endl;
+}
 
-
-        initalized = true;
+void Shader::Load(std::string vertexPath, std::string fragmentPath){
+    std::string vertexCode;
+    std::string fragmentCode;
+    std::ifstream vShaderFile;
+    std::ifstream fShaderFile;
+    // ensure ifstream objects can throw exceptions:
+    vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    try 
+    {
+        // open files
+        vShaderFile.open(vertexPath.c_str());
+        fShaderFile.open(fragmentPath.c_str());
+        //fShaderFile.open("../shaders/SegmentFragment.fs");
+        //vShaderFile.open("../shaders/SegmentVertex.vs");
+        std::stringstream vShaderStream, fShaderStream;
+        // read file's buffer contents into streams
+        vShaderStream << vShaderFile.rdbuf();
+        fShaderStream << fShaderFile.rdbuf();
+        // close file handlers
+        vShaderFile.close();
+        fShaderFile.close();
+        // convert stream into string
+        vertexCode   = vShaderStream.str();
+        fragmentCode = fShaderStream.str();
     }
+    catch (std::ifstream::failure& e)
+    {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+    }
+    const char* vShaderCode = vertexCode.c_str();
+    const char * fShaderCode = fragmentCode.c_str();
+    // 2. compile shaders
+    unsigned int vertex, fragment;
+    // vertex shader
+    vertex = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex, 1, &vShaderCode, NULL);
+    glCompileShader(vertex);
+    checkCompileErrors(vertex, "VERTEX");
+    // fragment Shader
+    fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment, 1, &fShaderCode, NULL);
+    glCompileShader(fragment);
+    checkCompileErrors(fragment, "FRAGMENT");
+    // shader Program
+    ID = glCreateProgram();
+    glAttachShader(ID, vertex);
+    glAttachShader(ID, fragment);
+    glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
+    // delete the shaders as they're linked into our program now and no longer necessary
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+    std::cout << "Create Part Shader: " << ID << std::endl;
+}
+
+Shader::~Shader(){
+    std::cout << "ID: "<< ID << " Removed !" << std::endl;
+    glDeleteProgram(ID);
+}
+
+
+bool Segment::initalized = false;
+Shader Segment::shader = Shader();
+Segment::Segment(glm::vec3 _p , float _length,float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
+    if(!Segment::initalized){
+        Segment::shader.Load("../shaders/SegmentVertex.vs","../shaders/SegmentFragment.fs");
+        Segment::initalized = true;
+    }
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1,&VBO);
+    glGenBuffers(1,&EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(uvs),uvs,GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices),indices,GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE, 2 * sizeof(float),(void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindVertexArray(0);
+    
     point = _p;
     length = _length;
     model = glm::mat4(1.0f);
@@ -151,23 +243,19 @@ Segment::Segment(glm::vec3 _p , float _length,float _angle, float _thickness, gl
 //}
 
 Segment::~Segment(){
-    if(initalized){
-        glDeleteVertexArrays(1,&VAO);
-        glDeleteBuffers(1,&VBO);
-        glDeleteBuffers(1,&EBO);
-        glDeleteProgram(ID);
-        initalized = false;
-    }
+    glDeleteVertexArrays(1,&VAO);
+    glDeleteBuffers(1,&VBO);
+    glDeleteBuffers(1,&EBO);
 }
 
 void Segment::Draw(glm::mat4 viewProj){
-    glUseProgram(ID);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"),1,false, &viewProj[0][0]);
-    glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
-    glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
-    glUniform1fv(glGetUniformLocation(ID, "len"),1,&length);
-    glUniformMatrix2fv(glGetUniformLocation(ID, "model"),1,false, &model[0][0]);
-    glUniform2fv(glGetUniformLocation(ID, "point"),1,&point[0]);
+    glUseProgram(Segment::shader.ID);
+    glUniformMatrix4fv(glGetUniformLocation(Segment::shader.ID, "mvp"),1,false, &viewProj[0][0]);
+    glUniform1fv(glGetUniformLocation(Segment::shader.ID, "antialias"),1,&antiAliasing);
+    glUniform1fv(glGetUniformLocation(Segment::shader.ID, "thickness"),1,&thickness);
+    glUniform1fv(glGetUniformLocation(Segment::shader.ID, "len"),1,&length);
+    glUniformMatrix2fv(glGetUniformLocation(Segment::shader.ID, "model"),1,false, &model[0][0]);
+    glUniform2fv(glGetUniformLocation(Segment::shader.ID, "point"),1,&point[0]);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -175,79 +263,13 @@ void Segment::Draw(glm::mat4 viewProj){
 
 
 
-
+bool Line::initalized = false;
+Shader Line::shader = Shader();
 Line::Line(float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
-    if(!initalized){
-
-        std::string vertexCode;
-        std::string fragmentCode;
-        std::string geometryCode;
-        std::ifstream vShaderFile;
-        std::ifstream fShaderFile;
-        std::ifstream gShaderFile;
-        // ensure ifstream objects can throw exceptions:
-        vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        gShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        try 
-        {
-            std::cout << "Hello" << std::endl;
-            // open files
-            vShaderFile.open("../shaders/LineVertex.vs");
-            fShaderFile.open("../shaders/LineFragment.fs");
-            gShaderFile.open("../shaders/LineGeometry.gs");
-            std::stringstream vShaderStream, fShaderStream, gShaderStream;
-            // read file's buffer contents into streams
-            vShaderStream << vShaderFile.rdbuf();
-            fShaderStream << fShaderFile.rdbuf();
-            gShaderStream << gShaderFile.rdbuf();
-            // close file handlers
-            vShaderFile.close();
-            fShaderFile.close();
-            gShaderFile.close();
-            // convert stream into string
-            vertexCode   = vShaderStream.str();
-            fragmentCode = fShaderStream.str();
-            geometryCode = gShaderStream.str();
-        }
-        catch (std::ifstream::failure& e)
-        {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
-        }
-        const char* vShaderCode = vertexCode.c_str();
-        const char * fShaderCode = fragmentCode.c_str();
-        const char * gShaderCode = geometryCode.c_str();
-        // 2. compile shaders
-        unsigned int vertex, fragment, geometry;
-        // vertex shader
-        vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, &vShaderCode, NULL);
-        glCompileShader(vertex);
-        checkCompileErrors(vertex, "VERTEX");
-         // fragment Shader
-        geometry = glCreateShader(GL_GEOMETRY_SHADER);
-        glShaderSource(geometry, 1, &gShaderCode, NULL);
-        glCompileShader(geometry);
-        checkCompileErrors(geometry, "GEOMETRY");
-        // fragment Shader
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
-        glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
-        // shader Program
-        ID = glCreateProgram();
-        glAttachShader(ID, vertex);
-        glAttachShader(ID, geometry);
-        glAttachShader(ID, fragment);
-        glLinkProgram(ID);
-        checkCompileErrors(ID, "PROGRAM");
-        // delete the shaders as they're linked into our program now and no longer necessary
-        glDeleteShader(vertex);
-        glDeleteShader(fragment);
-        glDeleteShader(geometry);
-
-
-        initalized = true;
+    if(!Line::initalized){
+        std::cout << "Line Not INIT"<< std::endl;
+        Line::shader.Load("../shaders/LineVertex.vs","../shaders/LineFragment.fs","../shaders/LineGeometry.gs");
+        Line::initalized = true;
     }
     model = glm::mat4(1.0f);
     model[0][0] = cos(_angle);
@@ -268,13 +290,11 @@ Line::Line(float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing)
 //}
 
 Line::~Line(){
-    if(initalized){
-        glDeleteVertexArrays(1,&VAO);
-        glDeleteBuffers(1,&VBO);
-        //glDeleteBuffers(1,&EBO);
-        glDeleteProgram(ID);
-        initalized = false;
-    }
+    
+    glDeleteVertexArrays(1,&VAO);
+    glDeleteBuffers(1,&VBO);
+    //glDeleteBuffers(1,&EBO);
+    
 }
 
 void Line::AddPoint(glm::vec3 point){
@@ -312,88 +332,21 @@ void Line::Draw(glm::mat4 viewProj){
 
     glm::mat4 mvp = viewProj * model;
 
-    glUseProgram(ID);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);
-    glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
-    glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
-    glUniform4fv(glGetUniformLocation(ID, "color"), 1, &rgba[0]);
+    glUseProgram(Line::shader.ID);
+    glUniformMatrix4fv(glGetUniformLocation(Line::shader.ID, "mvp"), 1, false, &mvp[0][0]);
+    glUniform1fv(glGetUniformLocation(Line::shader.ID, "antialias"),1,&antiAliasing);
+    glUniform1fv(glGetUniformLocation(Line::shader.ID, "thickness"),1,&thickness);
+    glUniform4fv(glGetUniformLocation(Line::shader.ID, "color"), 1, &rgba[0]);
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, points.size());
     glBindVertexArray(0);
 }
 
-
+bool LineArea::initalized = false;
+Shader LineArea::shader = Shader();
 LineArea::LineArea(float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
     if(!initalized){
-
-        std::string vertexCode;
-        std::string fragmentCode;
-        std::string geometryCode;
-        std::ifstream vShaderFile;
-        std::ifstream fShaderFile;
-        std::ifstream gShaderFile;
-        // ensure ifstream objects can throw exceptions:
-        vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        gShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        try 
-        {
-            std::cout << "Hello" << std::endl;
-            // open files
-            vShaderFile.open("../shaders/AreaVertex.vs");
-            fShaderFile.open("../shaders/AreaFragment.fs");
-            gShaderFile.open("../shaders/AreaGeometry.gs");
-            std::stringstream vShaderStream, fShaderStream, gShaderStream;
-            // read file's buffer contents into streams
-            vShaderStream << vShaderFile.rdbuf();
-            fShaderStream << fShaderFile.rdbuf();
-            gShaderStream << gShaderFile.rdbuf();
-            // close file handlers
-            vShaderFile.close();
-            fShaderFile.close();
-            gShaderFile.close();
-            // convert stream into string
-            vertexCode   = vShaderStream.str();
-            fragmentCode = fShaderStream.str();
-            geometryCode = gShaderStream.str();
-        }
-        catch (std::ifstream::failure& e)
-        {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
-        }
-        const char* vShaderCode = vertexCode.c_str();
-        const char * fShaderCode = fragmentCode.c_str();
-        const char * gShaderCode = geometryCode.c_str();
-        // 2. compile shaders
-        unsigned int vertex, fragment, geometry;
-        // vertex shader
-        vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, &vShaderCode, NULL);
-        glCompileShader(vertex);
-        checkCompileErrors(vertex, "VERTEX");
-         // fragment Shader
-        geometry = glCreateShader(GL_GEOMETRY_SHADER);
-        glShaderSource(geometry, 1, &gShaderCode, NULL);
-        glCompileShader(geometry);
-        checkCompileErrors(geometry, "GEOMETRY");
-        // fragment Shader
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
-        glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
-        // shader Program
-        ID = glCreateProgram();
-        glAttachShader(ID, vertex);
-        glAttachShader(ID, geometry);
-        glAttachShader(ID, fragment);
-        glLinkProgram(ID);
-        checkCompileErrors(ID, "PROGRAM");
-        // delete the shaders as they're linked into our program now and no longer necessary
-        glDeleteShader(vertex);
-        glDeleteShader(fragment);
-        glDeleteShader(geometry);
-
-
+        shader.Load("../shaders/AreaVertex.vs","../shaders/AreaFragment.fs","../shaders/AreaGeometry.gs");
         initalized = true;
     }
     model = glm::mat4(1.0f);
@@ -415,13 +368,9 @@ LineArea::LineArea(float _angle, float _thickness, glm::vec4 _rgba ,float _antiA
 //}
 
 LineArea::~LineArea(){
-    if(initalized){
-        glDeleteVertexArrays(1,&VAO);
-        glDeleteBuffers(1,&VBO);
-        //glDeleteBuffers(1,&EBO);
-        glDeleteProgram(ID);
-        initalized = false;
-    }
+    glDeleteVertexArrays(1,&VAO);
+    glDeleteBuffers(1,&VBO);
+    //glDeleteBuffers(1,&EBO);
 }
 
 void LineArea::AddPoint(glm::vec3 point){
@@ -445,17 +394,19 @@ void LineArea::Build(){
 }
 
 void LineArea::Draw(glm::mat4 viewProj){
-    glUseProgram(ID);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &viewProj[0][0]);
-    glUniform1fv(glGetUniformLocation(ID, "antialias"),1,&antiAliasing);
-    glUniform1fv(glGetUniformLocation(ID, "thickness"),1,&thickness);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "model"),1,false,&model[0][0]);
-    glUniform4fv(glGetUniformLocation(ID, "color"), 1, &rgba[0]);
+    glUseProgram(LineArea::shader.ID);
+    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "mvp"), 1, false, &viewProj[0][0]);
+    glUniform1fv(glGetUniformLocation(shader.ID, "antialias"),1,&antiAliasing);
+    glUniform1fv(glGetUniformLocation(shader.ID, "thickness"),1,&thickness);
+    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"),1,false,&model[0][0]);
+    glUniform4fv(glGetUniformLocation(shader.ID, "color"), 1, &rgba[0]);
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP, 0, points.size());
     glBindVertexArray(0);
 }
 
+bool TextRender::initalized = false;
+Shader TextRender::shader = Shader();
 void TextRender::LoadChar(){
     // FreeType
     // --------
@@ -543,59 +494,10 @@ TextRender::TextRender() {
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    std::string vertexCode;
-    std::string fragmentCode;
-    std::ifstream vShaderFile;
-    std::ifstream fShaderFile;
-    // ensure ifstream objects can throw exceptions:
-    vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try
-    {
-        
-        // open files
-        vShaderFile.open("../shaders/text.vs");
-        fShaderFile.open("../shaders/text.fs");
-        std::stringstream vShaderStream, fShaderStream;
-        // read file's buffer contents into streams
-        vShaderStream << vShaderFile.rdbuf();
-        fShaderStream << fShaderFile.rdbuf();
-        // close file handlers
-        vShaderFile.close();
-        fShaderFile.close();
-        // convert stream into string
-        vertexCode = vShaderStream.str();
-        fragmentCode = fShaderStream.str();
+    if(!initalized){
+        shader.Load("../shaders/text.vs","../shaders/text.fs");
+        initalized = true;
     }
-    catch (std::ifstream::failure& e)
-    {
-        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
-    }
-    const char* vShaderCode = vertexCode.c_str();
-    const char* fShaderCode = fragmentCode.c_str();
-    // 2. compile shaders
-    unsigned int vertex, fragment;
-    // vertex shader
-    vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vShaderCode, NULL);
-    glCompileShader(vertex);
-    checkCompileErrors(vertex, "VERTEX");
-    // fragment Shader
-    fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fShaderCode, NULL);
-    glCompileShader(fragment);
-    checkCompileErrors(fragment, "FRAGMENT");
-    // shader Program
-    ID = glCreateProgram();
-    glAttachShader(ID, vertex);
-    glAttachShader(ID, fragment);
-    glLinkProgram(ID);
-    checkCompileErrors(ID, "PROGRAM");
-    // delete the shaders as they're linked into our program now and no longer necessary
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
-
     LoadChar();
 
     proj = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
@@ -617,9 +519,9 @@ void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, float sc
 
     model = glm::translate(glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, -1)), glm::vec3(pos.x - textCenter, pos.y, 0));
     glm::mat4 mvp = viewProj * model;
-    glUseProgram(ID);
-    glUniform4f(glGetUniformLocation(ID, "textColor"), _rgba.r, _rgba.g, _rgba.b,_rgba.a);
-    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"),1,false,&mvp[0][0]);
+    glUseProgram(shader.ID);
+    glUniform4f(glGetUniformLocation(shader.ID, "textColor"), _rgba.r, _rgba.g, _rgba.b,_rgba.a);
+    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "mvp"),1,false,&mvp[0][0]);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 

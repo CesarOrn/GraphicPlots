@@ -12,10 +12,11 @@
 * 
 */
 struct Shader {
+    unsigned int ID;
     Shader();
+    void Load(std::string vertexPath, std::string fragmentPath, std::string geometryPath);
+    void Load(std::string vertexPath, std::string fragmentPath);
     ~Shader();
-    void LoadShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryShader);
-    void GetShader(std::string name);
 };
 
 struct Segment{
@@ -30,8 +31,8 @@ struct Segment{
     unsigned int VAO;
     unsigned int VBO;
     unsigned int EBO;
-    bool initalized = false;
-    unsigned int ID;
+    static bool initalized;
+    static Shader shader;
 
     Segment(glm::vec3 p , float length,float angle, float thickness = 2, glm::vec4 rgba = glm::vec4(0.0f,0.0f,0.0f,1.0f) ,float antiAliasing = 1.0f);
     //Line(std::array<float,3> p1, std::array<float,3> p2, float thickness = 2, std::array<float,3> rgb = std::array<float,3>{0.0f,0.0f,0.0f} ,float antiAliasing = 1.0f);
@@ -49,8 +50,8 @@ struct Line {
     unsigned int VAO;
     unsigned int VBO;
     unsigned int EBO;
-    bool initalized = false;
-    unsigned int ID;
+    static bool initalized;
+    static Shader shader;
 
     Line(float angle = 0, float thickness = 2, glm::vec4 rgba = glm::vec4( 0.0f,0.0f,0.0f,1.0f ), float antiAliasing = 1.0f);
     void AddPoint(glm::vec3 point);
@@ -71,8 +72,8 @@ struct LineArea{
     float antiAliasing;
     unsigned int VAO;
     unsigned int VBO;
-    bool initalized = false;
-    unsigned int ID;
+    static bool initalized;
+    static Shader shader;
 
     LineArea(float angle = 0, float thickness = 2, glm::vec4 rgba = glm::vec4( 0.0f,0.0f,0.0f,1.0f), float antiAliasing = 1.0f);
     void AddPoint(glm::vec3 point);
@@ -93,10 +94,11 @@ struct Character {
 struct TextRender {
     unsigned int VAO;
     unsigned int VBO;
-    unsigned int ID;
     glm::mat4 model; 
     glm::mat4 proj;
     std::map<char, Character> characters;
+    static bool initalized;
+    static Shader shader;
 
     void LoadChar();
 
