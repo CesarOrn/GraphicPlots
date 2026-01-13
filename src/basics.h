@@ -8,6 +8,15 @@
 #include <string>
 #include <map>
 
+/*
+* 
+*/
+struct Shader {
+    Shader();
+    ~Shader();
+    void LoadShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryShader);
+    void GetShader(std::string name);
+};
 
 struct Segment{
     glm::vec3 point;
@@ -113,6 +122,8 @@ struct Figure {
     glm::vec4 boarderColor;
     glm::vec4 backGroundColor;
 
+    //Line axis;
+    glm::vec4 axisColor;
     //Line axis;
 
     unsigned int VAO;

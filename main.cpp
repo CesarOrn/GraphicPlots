@@ -6,7 +6,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "src/basics.h"
-
 #include <cmath>
 
 #include <iostream>
@@ -80,7 +79,7 @@ int main()
     Figure fig;
     fig.SetXLabel("Label");
     fig.SetYLabel("Count");
-    fig.SetTextScale(0.0025f);
+    fig.SetTextScale(0.0020f);
     //fig.LineArea();
     // render loop
     // -----------

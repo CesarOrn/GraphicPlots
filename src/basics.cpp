@@ -1,4 +1,7 @@
+#define _USE_MATH_DEFINES
 #include "basics.h"
+
+
 #include <cmath>
 #include <fstream>
 #include <sstream>
@@ -169,6 +172,8 @@ void Segment::Draw(glm::mat4 viewProj){
     glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
+
+
 
 
 Line::Line(float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
@@ -478,7 +483,7 @@ void TextRender::LoadChar(){
     }
     else {
         // set size to load glyphs as
-        FT_Set_Pixel_Sizes(face, 0, 48);
+        FT_Set_Pixel_Sizes(face, 0, 64);
 
         // disable byte-alignment restriction
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -661,6 +666,12 @@ Figure::Figure(){
     xLabelScale = 0.003f;
     yLabelScale = 0.003f;
     zLabelScale = 0.003f;
+    axisColor = glm::vec4(0.10f, 0.10f, 0.10f, 1.0f);
+    //axis = Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
+    //axis.AddPoint(glm::vec3(-0.80f, 0.90f, 0.0f));
+    //axis.AddPoint(glm::vec3(-0.80f, -0.80f, 0.0f));
+    //axis.AddPoint(glm::vec3(0.90f, -0.80f, 0.0f));
+    //axis.Build();
 }
 
 Figure::~Figure(){
@@ -698,6 +709,10 @@ void Figure::Hist(){
 }
 
 void Figure::Draw(glm::mat4 proj){
+    //Draw Text
     txtRender.Draw(proj,glm::vec2(0.0f,0.85f),-M_PI/2,yLabelScale,yLabel, glm::vec4( 0.10f, 0.10f, 0.10f,1.0f));
     txtRender.Draw(proj,glm::vec2(0.0f, -0.95f), 0.0f,xLabelScale,xLabel, glm::vec4(0.10f, 0.10f, 0.10f,1.0f));
+    //Draw Axis Lines;
+    //axis.Draw(proj);
+    //Draw Data
 }
