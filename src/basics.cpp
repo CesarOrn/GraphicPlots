@@ -569,11 +569,11 @@ Figure::Figure(){
     yLabelScale = 0.003f;
     zLabelScale = 0.003f;
     axisColor = glm::vec4(0.10f, 0.10f, 0.10f, 1.0f);
-    //axis = Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
-    //axis.AddPoint(glm::vec3(-0.80f, 0.90f, 0.0f));
-    //axis.AddPoint(glm::vec3(-0.80f, -0.80f, 0.0f));
-    //axis.AddPoint(glm::vec3(0.90f, -0.80f, 0.0f));
-    //axis.Build();
+    axis = Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
+    axis.AddPoint(glm::vec3(-0.80f, 0.90f, 0.0f));
+    axis.AddPoint(glm::vec3(-0.80f, -0.80f, 0.0f));
+    axis.AddPoint(glm::vec3(0.90f, -0.80f, 0.0f));
+    axis.Build();
 }
 
 Figure::~Figure(){
@@ -615,6 +615,6 @@ void Figure::Draw(glm::mat4 proj){
     txtRender.Draw(proj,glm::vec2(0.0f,0.85f),-M_PI/2,yLabelScale,yLabel, glm::vec4( 0.10f, 0.10f, 0.10f,1.0f));
     txtRender.Draw(proj,glm::vec2(0.0f, -0.95f), 0.0f,xLabelScale,xLabel, glm::vec4(0.10f, 0.10f, 0.10f,1.0f));
     //Draw Axis Lines;
-    //axis.Draw(proj);
+    axis.Draw(proj);
     //Draw Data
 }

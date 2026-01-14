@@ -60,11 +60,6 @@ int main()
     glm::vec4 col(0.10f,0.10f,0.10f,1.0f);
     glm::vec4 colShade(0.15f,0.49f,0.75f,0.75f);
     Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
-    Line axis = Line(M_PI* 0.0, 0.008f, col, 0.003f);
-    axis.AddPoint(glm::vec3(-0.80f, 0.90f, 0.0f));
-    axis.AddPoint(glm::vec3(-0.80f, -0.80f, 0.0f));
-    axis.AddPoint(glm::vec3(0.90f, -0.80f, 0.0f));
-    axis.Build();
 
     LineArea lineA = LineArea(M_PI* 0.0, 0.2f, colShade, 0.025f);
     for(int i = 0; i < 100; i++){
@@ -94,7 +89,6 @@ int main()
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         //segment.Draw(proj);
-        axis.Draw(proj);
         lineA.Draw(proj);
         fig.Draw(proj);
         

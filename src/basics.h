@@ -126,7 +126,7 @@ struct Figure {
 
     //Line axis;
     glm::vec4 axisColor;
-    //Line axis;
+    Line axis;
 
     unsigned int VAO;
     unsigned int VBO;
@@ -153,7 +153,7 @@ struct Figure {
     void SetZLabel(std::string zLabel);
     void SetTextScale(float scale);
 
-    void Hist();
+    void Hist(std::vector<float> points);
     void LineArea(std::vector<glm::vec2> points);
     void Draw(glm::mat4 proj);
 
