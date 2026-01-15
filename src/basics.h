@@ -183,8 +183,8 @@ struct Figure {
 
 
     void Hist(std::vector<float> data, float binStart, float binEnd,int binCount);
-    void Line(std::vector<glm::vec3> points);
-    void LineArea(std::vector<glm::vec3> points);
+    void Plot(std::vector<glm::vec3> points);
+    void PlotArea(std::vector<glm::vec3> points);
 
     //void CalculateFitTransform(std::vector<glm::vec3> points);
 

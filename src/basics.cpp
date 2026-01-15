@@ -569,10 +569,10 @@ Figure::Figure(){
     yLabelScale = 0.003f;
     zLabelScale = 0.003f;
     axisColor = glm::vec4(0.10f, 0.10f, 0.10f, 1.0f);
-    axis = Line::Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
-    axis.AddPoint(glm::vec3(-0.80f, 0.90f, 0.0f));
-    axis.AddPoint(glm::vec3(-0.80f, -0.80f, 0.0f));
-    axis.AddPoint(glm::vec3(0.90f, -0.80f, 0.0f));
+    axis = Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
+    axis.AddPoint(glm::vec3(0.0f, 1.0f, 0.0f));
+    axis.AddPoint(glm::vec3(0.0f, 0.0f, 0.0f));
+    axis.AddPoint(glm::vec3(1.0f, 0.0f, 0.0f));
     axis.Build();
 
     model = glm::mat4(1.0f);
@@ -617,7 +617,7 @@ void Figure::SetPlotTranslate(float xTrans, float yTrans, float zTrans) {
     model = glm::translate(model, glm::vec3(xTrans, yTrans, zTrans));
 }
 
-void Figure::LineArea(std::vector<glm::vec3> points){
+void Figure::PlotArea(std::vector<glm::vec3> points){
     //Delete a older plot.
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
@@ -661,22 +661,25 @@ void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int bin
     }
     std::vector<glm::vec3> hist;
     for (int i =0; i != count.size(); i++) {
-        hist.push_back(glm::vec3(binStart + binWidth * (float(i) - 0.5), count[i], 0.0f));
+        hist.push_back(glm::vec3(binStart + binWidth * (float(i)), count[i], 0.0f));
     }
 
-    LineArea(hist);
+    PlotArea(hist);
     return;
 }
 
 void Figure::Draw(glm::mat4 proj){
-    //Draw Text
-    txtRender.Draw(proj,glm::vec2(0.0f,0.85f),-M_PI/2,yLabelScale,yLabel, glm::vec4( 0.10f, 0.10f, 0.10f,1.0f));
-    txtRender.Draw(proj,glm::vec2(0.0f, -0.95f), 0.0f,xLabelScale,xLabel, glm::vec4(0.10f, 0.10f, 0.10f,1.0f));
-    //Draw Axis Lines;
-    axis.Draw(proj);
-    //Draw Data
+    glm::mat4 correctionMat = glm::scale(glm::translate(glm::mat4(1.0f),glm::vec3(0.08f,0.08f,0.0f)),glm::vec3(0.85f,0.85f,1.0f));
+    glm::mat4 mvp = proj * correctionMat;
 
-    glm::mat4 mvp = proj * model;
+    //Draw Text
+    txtRender.Draw(mvp,glm::vec2(0.5f,0.0f),-M_PI/2,yLabelScale,yLabel, glm::vec4( 0.10f, 0.10f, 0.10f,1.0f));
+    txtRender.Draw(mvp,glm::vec2(0.5f,-0.085f), 0.0f,xLabelScale,xLabel, glm::vec4(0.10f, 0.10f, 0.10f,1.0f));
+    //Draw Axis Lines;
+    axis.Draw(mvp);
+    //Draw Data
+    glm::mat4 correctionPlotMat = glm::scale(glm::mat4(1.0f),glm::vec3((1.0f) / (9.0f), 1.0f/4.0f,1.0f));
+    mvp = proj * correctionMat * correctionPlotMat;
     unsigned int ID = LineArea::shader.ID;
     glUseProgram(ID);
     glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);

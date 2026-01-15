@@ -79,12 +79,12 @@ int main()
     Figure fig;
     fig.SetXLabel("Label");
     fig.SetYLabel("Count");
-    fig.SetTextScale(0.0020f);
+    fig.SetTextScale(0.0015f);
     fig.Hist(data,0,10,10);
-    fig.SetPlotTranslate(-0.7f, -0.8f, 0.0f);
-    fig.SetPlotScale((1.0f * 1.75) / (9.0f), 1.0f/3.0f, 1.0f);
+    fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
+    fig.SetPlotScale(0.0f, 0.0f, 0.0f);
     
-    
+    proj = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
     //fig.LineArea();
     // render loop
     // -----------
@@ -132,10 +132,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
     float aspectRatio = (float)width / (float)height;
     if (aspectRatio >=1) {
-        proj = glm::ortho(-aspectRatio, aspectRatio, -1.0f, 1.0f, 0.0f, 1.0f);
+        proj = glm::ortho(0.0f, aspectRatio, 0.0f, 1.0f, 0.0f, 1.0f);
     }
     else {
-        proj = glm::ortho(-1.0f, 1.0f, 1.0f/-aspectRatio, 1.0f / aspectRatio, 0.0f, 1.0f);
+        proj = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f / aspectRatio, 0.0f, 1.0f);
     }
     //
     //proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
