@@ -60,14 +60,19 @@ int main()
     glm::vec4 col(0.10f,0.10f,0.10f,1.0f);
     glm::vec4 colShade(0.15f,0.49f,0.75f,0.75f);
     Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
+    LineArea lineA = LineArea(M_PI * 0.0, 0.2f, colShade, 0.025f);
+    std::vector<float> data;
+    data.push_back(0);
+    data.push_back(1);
+    data.push_back(1);
+    data.push_back(2);
+    data.push_back(2);
 
-    LineArea lineA = LineArea(M_PI* 0.0, 0.2f, colShade, 0.025f);
-    for(int i = 0; i < 100; i++){
-        lineA.AddPoint(glm::vec3((i* 2*M_PI/100)/6-0.5,cos(i* 2*M_PI/100),0.0f ));
-    }
-    lineA.Build();
+    data.push_back(9);
+    data.push_back(9);
+    data.push_back(9);
+    data.push_back(9);
 
-    
 
     glm::mat4 view(1.0f);
     
@@ -75,6 +80,11 @@ int main()
     fig.SetXLabel("Label");
     fig.SetYLabel("Count");
     fig.SetTextScale(0.0020f);
+    fig.Hist(data,0,10,10);
+    fig.SetPlotTranslate(-0.7f, -0.8f, 0.0f);
+    fig.SetPlotScale((1.0f * 1.75) / (9.0f), 1.0f/3.0f, 1.0f);
+    
+    
     //fig.LineArea();
     // render loop
     // -----------
@@ -89,7 +99,6 @@ int main()
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         //segment.Draw(proj);
-        lineA.Draw(proj);
         fig.Draw(proj);
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)

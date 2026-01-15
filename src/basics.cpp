@@ -569,15 +569,22 @@ Figure::Figure(){
     yLabelScale = 0.003f;
     zLabelScale = 0.003f;
     axisColor = glm::vec4(0.10f, 0.10f, 0.10f, 1.0f);
-    axis = Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
+    axis = Line::Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
     axis.AddPoint(glm::vec3(-0.80f, 0.90f, 0.0f));
     axis.AddPoint(glm::vec3(-0.80f, -0.80f, 0.0f));
     axis.AddPoint(glm::vec3(0.90f, -0.80f, 0.0f));
     axis.Build();
+
+    model = glm::mat4(1.0f);
+    rgba = glm::vec4(0.15f, 0.49f, 0.75f, 0.75f);
+    thickness = 0.005;
+    antiAliasing = 0.002f;
+
 }
 
 Figure::~Figure(){
-
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 }
 
 void Figure::SetTitle(std::string title){
@@ -602,12 +609,63 @@ void Figure::SetTextScale(float scale){
     zLabelScale = scale;
 }
 
-void Figure::LineArea(std::vector<glm::vec2> points){
-
+void Figure::SetPlotScale(float xScale, float yScale, float zScale) {
+    model = glm::scale(model,glm::vec3(xScale, yScale, zScale));
 }
 
-void Figure::Hist(){
+void Figure::SetPlotTranslate(float xTrans, float yTrans, float zTrans) {
+    model = glm::translate(model, glm::vec3(xTrans, yTrans, zTrans));
+}
 
+void Figure::LineArea(std::vector<glm::vec3> points){
+    //Delete a older plot.
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec3), points.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    drawCount = points.size();
+}
+
+void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int binCount){
+    float binWidth = (binEnd - binStart) / binCount;
+    std::vector<int> count;
+    count.resize(binCount);
+    for (auto i = data.begin(); i != data.end(); i++) {
+        if (*i < binStart) {
+            count[0]++;
+            continue;
+        }
+        if (*i > binEnd) {
+            count[data.size() - 1]++;
+            continue;
+        }
+        for (int j = 0; j < count.size(); j++) {
+            if (*i <= (binWidth*j + binStart)) {
+                count[j] = count[j] + 1;
+                break;
+            }
+        }
+    }
+    std::vector<glm::vec3> hist;
+    for (int i =0; i != count.size(); i++) {
+        hist.push_back(glm::vec3(binStart + binWidth * (float(i) - 0.5), count[i], 0.0f));
+    }
+
+    LineArea(hist);
+    return;
 }
 
 void Figure::Draw(glm::mat4 proj){
@@ -617,4 +675,16 @@ void Figure::Draw(glm::mat4 proj){
     //Draw Axis Lines;
     axis.Draw(proj);
     //Draw Data
+
+    glm::mat4 mvp = proj * model;
+    unsigned int ID = LineArea::shader.ID;
+    glUseProgram(ID);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);
+    glUniform1fv(glGetUniformLocation(ID, "antialias"), 1, &antiAliasing);
+    glUniform1fv(glGetUniformLocation(ID, "thickness"), 1, &thickness);
+    glUniformMatrix4fv(glGetUniformLocation(ID, "model"), 1, false, &model[0][0]);
+    glUniform4fv(glGetUniformLocation(ID, "color"), 1, &rgba[0]);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_LINE_STRIP, 0, drawCount);
+    glBindVertexArray(0);
 }

@@ -2,6 +2,7 @@
 
 uniform float antialias;
 uniform float thickness;
+uniform mat4 mvp;
 
 layout (lines) in;
 layout (triangle_strip, max_vertices = 6) out;
@@ -16,24 +17,24 @@ void main(){
 	vec4 p2Proj = gl_in[1].gl_Position;
 	p2Proj.y = 0.0;
 
-	gl_Position  =  gl_in[0].gl_Position;
+	gl_Position  =  mvp * gl_in[0].gl_Position;
 	uv = vec2(0,1);
 	EmitVertex();
-	gl_Position  =  gl_in[1].gl_Position;
+	gl_Position  =  mvp * gl_in[1].gl_Position;
 	uv = vec2(0,1);
 	EmitVertex();
-	gl_Position  =  p1Proj;
+	gl_Position  =  mvp * p1Proj;
 	uv = vec2(0,-1);
 	EmitVertex();
 	EndPrimitive();
 
-	gl_Position  =  p1Proj;
+	gl_Position  =  mvp * p1Proj;
 	uv = vec2(0,1);
 	EmitVertex();
-	gl_Position  =  gl_in[1].gl_Position;
+	gl_Position  =  mvp * gl_in[1].gl_Position;
 	uv = vec2(0,-1);
 	EmitVertex();
-	gl_Position  =  p2Proj;
+	gl_Position  =  mvp * p2Proj;
 	uv = vec2(0,-1);
 	EmitVertex();
 	EndPrimitive();

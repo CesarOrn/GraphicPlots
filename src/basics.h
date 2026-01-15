@@ -106,8 +106,18 @@ struct TextRender {
     void Draw(glm::mat4 viewProj, glm::vec2 pos, float rotation, float scale, std::string text, glm::vec4 rgba);
 };
 
+enum class PlotsType : unsigned int {
+    LINE_SEGMENTS,
+    LINE,
+    LINE_AREA,
+    HISTOGRAM,
+    HEAT_MAP
+};
+
 /*
 * Still need to add axis to make subplots possible;
+* Most plots are just point in 3d space with diffrent interpertaions.
+* Heat 
 */
 struct Figure {
     TextRender txtRender;
@@ -128,8 +138,18 @@ struct Figure {
     glm::vec4 axisColor;
     Line axis;
 
+    glm::vec3 point;
+    float length;
+    glm::mat4 model;
+    float thickness;
+    glm::vec4 rgba;
+    glm::vec2 resolution;
+    float antiAliasing;
+    //Should this be static? UV don't change
+    int drawCount;
     unsigned int VAO;
     unsigned int VBO;
+    unsigned int EBO;
 
     //Scale of plots
     float minX;
@@ -153,8 +173,21 @@ struct Figure {
     void SetZLabel(std::string zLabel);
     void SetTextScale(float scale);
 
-    void Hist(std::vector<float> points);
-    void LineArea(std::vector<glm::vec2> points);
+    void SetPlotScale(float xScale, float yScale, float zScale);
+    void SetPlotTranslate(float xTrans, float yTrans, float zTrans);
+    //void SetPlotScaleY(float yScale);
+    //void SetPlotScaleZ(float zScale);
+    //void SetPlotTranslationX(float transX);
+    //void SetPlotTranslationY(float transY);
+    //void SetPlotTranslationZ(float transZ);
+
+
+    void Hist(std::vector<float> data, float binStart, float binEnd,int binCount);
+    void Line(std::vector<glm::vec3> points);
+    void LineArea(std::vector<glm::vec3> points);
+
+    //void CalculateFitTransform(std::vector<glm::vec3> points);
+
     void Draw(glm::mat4 proj);
 
 
