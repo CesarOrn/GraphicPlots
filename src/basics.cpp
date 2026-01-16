@@ -568,6 +568,8 @@ Figure::Figure(){
     xLabelScale = 0.003f;
     yLabelScale = 0.003f;
     zLabelScale = 0.003f;
+    axisThickness = 0.008f;
+    axisAntiAliasing = 0.003f;
     axisColor = glm::vec4(0.10f, 0.10f, 0.10f, 1.0f);
     axis = Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
     axis.AddPoint(glm::vec3(0.0f, 1.0f, 0.0f));
@@ -579,6 +581,13 @@ Figure::Figure(){
     rgba = glm::vec4(0.15f, 0.49f, 0.75f, 0.75f);
     thickness = 0.005;
     antiAliasing = 0.002f;
+
+    dataMaxZ = 1.0f;
+    dataMinZ = 0.0f;
+    dataMaxY = 1.0f;
+    dataMinY = 0.0f;
+    dataMaxX = 1.0f;
+    dataMinX = 0.0f;
 
 }
 
@@ -618,6 +627,25 @@ void Figure::SetPlotTranslate(float xTrans, float yTrans, float zTrans) {
 }
 
 void Figure::PlotArea(std::vector<glm::vec3> points){
+
+    auto it = points.begin();
+    dataMaxZ = (*it).z;
+    dataMinZ = (*it).z;
+    dataMaxY = (*it).y;
+    dataMinY = (*it).y;
+    dataMaxX = (*it).x;
+    dataMinX = (*it).x;
+    for (it = points.begin(); it != points.end(); it++) {
+        dataMaxZ = std::max(dataMaxZ, (*it).z);
+        dataMinZ = std::min(dataMinZ, (*it).z);
+        dataMaxY = std::max(dataMaxY, (*it).y);
+        dataMinY = std::min(dataMinY, (*it).y);
+        dataMaxX = std::max(dataMaxX, (*it).x);
+        dataMinX = std::min(dataMinX, (*it).x);
+    }
+    CalculateTicks();
+    CalculatePlotTransforms();
+
     //Delete a older plot.
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
@@ -649,7 +677,7 @@ void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int bin
             continue;
         }
         if (*i > binEnd) {
-            count[data.size() - 1]++;
+            count[count.size() - 1]++;
             continue;
         }
         for (int j = 0; j < count.size(); j++) {
@@ -668,6 +696,46 @@ void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int bin
     return;
 }
 
+void Figure::CalculateTicks() {
+    float totalTicks = 10;
+    xTicks.resize(0);
+    yTicks.resize(0);
+    zTicks.resize(0);
+    for (int i = 0; i <10; i++) {
+        float delta = (dataMaxX - dataMinX) / totalTicks;
+        xTicks.push_back(Ticks{ std::to_string(int(dataMinX + delta *i)), 
+                                glm::vec3((1.0f/totalTicks) * i,0.0f,0.0f)});
+    }
+
+    for (int i = 0; i < 10; i++) {
+        float delta = (dataMaxY - dataMinY) / totalTicks;
+        yTicks.push_back(Ticks{ std::to_string(int(dataMinY + delta * i)),
+                                glm::vec3(0.0f,(1.0f / totalTicks)*i,0.0f) });
+    }
+}
+
+void Figure::CalculatePlotTransforms() {
+    float dataDeltaX = dataMaxX - dataMinX;
+    if (dataDeltaX == 0.0f) {
+        dataDeltaX = 1;
+    }
+    float dataDeltaY = dataMaxY - dataMinY;
+    if (dataDeltaY == 0.0f) {
+        dataDeltaY = 1;
+    }
+    float dataDeltaZ = dataMaxZ - dataMinZ;
+    if (dataDeltaZ == 0.0f) {
+        dataDeltaZ = 1;
+    }
+    glm::vec3 axisTranslate((thickness+ antiAliasing)/2.0f , (thickness + antiAliasing) / 2.0f, 0);
+    glm::vec3 axisScales(1.0f / dataDeltaX * (1.0f - ((thickness + antiAliasing) / 2.0f)), 
+                         1.0f / dataDeltaY * (1.0f - ((thickness + antiAliasing) / 2.0f)),
+                         1.0f / dataDeltaZ * (1.0f - ((thickness + antiAliasing) / 2.0f)));
+
+    correctionPlotMat = glm::scale(glm::translate(glm::mat4(1.0f), axisTranslate), axisScales);
+
+}
+
 void Figure::Draw(glm::mat4 proj){
     glm::mat4 correctionMat = glm::scale(glm::translate(glm::mat4(1.0f),glm::vec3(0.08f,0.08f,0.0f)),glm::vec3(0.85f,0.85f,1.0f));
     glm::mat4 mvp = proj * correctionMat;
@@ -677,8 +745,17 @@ void Figure::Draw(glm::mat4 proj){
     txtRender.Draw(mvp,glm::vec2(0.5f,-0.085f), 0.0f,xLabelScale,xLabel, glm::vec4(0.10f, 0.10f, 0.10f,1.0f));
     //Draw Axis Lines;
     axis.Draw(mvp);
+    //Draw Ticks
+    for (auto it = xTicks.begin(); it != xTicks.end(); it++) {
+        txtRender.Draw(proj, glm::vec2((*it).position.x, (*it).position.y), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+    }
+    for (auto it = yTicks.begin(); it != yTicks.end(); it++) {
+        txtRender.Draw(proj, glm::vec2((*it).position.x, (*it).position.y), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+    }
     //Draw Data
-    glm::mat4 correctionPlotMat = glm::scale(glm::mat4(1.0f),glm::vec3((1.0f) / (9.0f), 1.0f/4.0f,1.0f));
+    /*
+    *  Need to calcualte any space lost due to thickness of 
+    */
     mvp = proj * correctionMat * correctionPlotMat;
     unsigned int ID = LineArea::shader.ID;
     glUseProgram(ID);

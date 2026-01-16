@@ -106,6 +106,12 @@ struct TextRender {
     void Draw(glm::mat4 viewProj, glm::vec2 pos, float rotation, float scale, std::string text, glm::vec4 rgba);
 };
 
+
+struct Ticks {
+    std::string text;
+    glm::vec3 position;
+};
+
 enum class PlotsType : unsigned int {
     LINE_SEGMENTS,
     LINE,
@@ -127,9 +133,9 @@ struct Figure {
     std::string zLabel;
     std::string title;
 
-    std::vector<float> xTics;
-    std::vector<float> yTics;
-    std::vector<float> zTics;
+    std::vector<Ticks> xTicks;
+    std::vector<Ticks> yTicks;
+    std::vector<Ticks> zTicks;
 
     glm::vec4 boarderColor;
     glm::vec4 backGroundColor;
@@ -137,6 +143,8 @@ struct Figure {
     //Line axis;
     glm::vec4 axisColor;
     Line axis;
+    float axisThickness;
+    float axisAntiAliasing;
 
     glm::vec3 point;
     float length;
@@ -150,6 +158,15 @@ struct Figure {
     unsigned int VAO;
     unsigned int VBO;
     unsigned int EBO;
+
+    //Data stats for scaling points
+    float dataMaxZ;
+    float dataMinZ;
+    float dataMaxY;
+    float dataMinY;
+    float dataMaxX;
+    float dataMinX;
+    glm::mat4 correctionPlotMat;
 
     //Scale of plots
     float minX;
@@ -181,13 +198,13 @@ struct Figure {
     //void SetPlotTranslationY(float transY);
     //void SetPlotTranslationZ(float transZ);
 
-
     void Hist(std::vector<float> data, float binStart, float binEnd,int binCount);
     void Plot(std::vector<glm::vec3> points);
     void PlotArea(std::vector<glm::vec3> points);
 
     //void CalculateFitTransform(std::vector<glm::vec3> points);
-
+    void CalculateTicks();
+    void CalculatePlotTransforms();
     void Draw(glm::mat4 proj);
 
 

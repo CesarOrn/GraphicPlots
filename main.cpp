@@ -72,6 +72,8 @@ int main()
     data.push_back(9);
     data.push_back(9);
     data.push_back(9);
+    data.push_back(10);
+    data.push_back(12);
 
 
     glm::mat4 view(1.0f);
