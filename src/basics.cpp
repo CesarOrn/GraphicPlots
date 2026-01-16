@@ -7,6 +7,9 @@
 #include <sstream>
 #include <iostream>
 
+#include <sstream>
+#include <iomanip>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <ft2build.h>
@@ -475,13 +478,16 @@ void TextRender::LoadChar(){
             character.bearing = glm::ivec2{face->glyph->bitmap_left, face->glyph->bitmap_top};
             character.advance = static_cast<unsigned int>(face->glyph->advance.x);
             characters.insert(std::pair<char, Character>(c, character));
+
+            maxWidth  = std::max(maxWidth, int(face->glyph->bitmap.width));
+            maxHeight = std::max(maxHeight, int(face->glyph->bitmap.rows));
+
         }
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     // destroy FreeType once we're finished
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
-    std::cout << "Hell22o" << std::endl;
 }
 
 TextRender::TextRender() {
@@ -498,6 +504,8 @@ TextRender::TextRender() {
         shader.Load("../shaders/text.vs","../shaders/text.fs");
         initalized = true;
     }
+    maxWidth = 0;
+    maxHeight = 0;
     LoadChar();
 
     proj = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
@@ -628,6 +636,7 @@ void Figure::SetPlotTranslate(float xTrans, float yTrans, float zTrans) {
 
 void Figure::PlotArea(std::vector<glm::vec3> points){
 
+
     auto it = points.begin();
     dataMaxZ = (*it).z;
     dataMinZ = (*it).z;
@@ -697,20 +706,30 @@ void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int bin
 }
 
 void Figure::CalculateTicks() {
-    float totalTicks = 10;
+    // Required becuase std::to_string() doesn't suppor presion setting.
+    std::ostringstream oss;
+    float totalTicks = 9;
     xTicks.resize(0);
     yTicks.resize(0);
     zTicks.resize(0);
-    for (int i = 0; i <10; i++) {
+    std::cout << dataMaxX << std::endl;
+    for (int i = 0; i <9; i++) {
         float delta = (dataMaxX - dataMinX) / totalTicks;
-        xTicks.push_back(Ticks{ std::to_string(int(dataMinX + delta *i)), 
+        oss << std::setprecision(2) << float(dataMinX + delta *i);
+        xTicks.push_back(Ticks{ oss.str(), 
                                 glm::vec3((1.0f/totalTicks) * i,0.0f,0.0f)});
+        oss.str("");
+        //oss.clear();
     }
 
-    for (int i = 0; i < 10; i++) {
-        float delta = (dataMaxY - dataMinY) / totalTicks;
-        yTicks.push_back(Ticks{ std::to_string(int(dataMinY + delta * i)),
-                                glm::vec3(0.0f,(1.0f / totalTicks)*i,0.0f) });
+    
+    for (int i = 0; i < 5; i++) {
+        float delta = (dataMaxY - dataMinY) / 5;
+        oss << std::setprecision(2) << float(dataMinY + delta *i);
+        yTicks.push_back(Ticks{ oss.str(), 
+                         glm::vec3(0.0f,(1.0f / 5)*i,0.0f) });
+        oss.str("");
+        //oss.clear();
     }
 }
 
@@ -746,11 +765,14 @@ void Figure::Draw(glm::mat4 proj){
     //Draw Axis Lines;
     axis.Draw(mvp);
     //Draw Ticks
+    //mvp = proj * correctionMat * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -thickness - antiAliasing- float(txtRender.maxHeight), 0.0f));
+    
     for (auto it = xTicks.begin(); it != xTicks.end(); it++) {
-        txtRender.Draw(proj, glm::vec2((*it).position.x, (*it).position.y), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+        txtRender.Draw(mvp, glm::vec2((*it).position.x, (*it).position.y-thickness - antiAliasing- float(txtRender.maxHeight)), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
     }
+    //mvp = proj * correctionMat * glm::translate(glm::mat4(1.0f), glm::vec3(-thickness - antiAliasing- float(txtRender.maxWidth),0.0f, 0.0f));
     for (auto it = yTicks.begin(); it != yTicks.end(); it++) {
-        txtRender.Draw(proj, glm::vec2((*it).position.x, (*it).position.y), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+        txtRender.Draw(mvp, glm::vec2((*it).position.x -thickness - antiAliasing- float(txtRender.maxWidth), (*it).position.y), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
     }
     //Draw Data
     /*

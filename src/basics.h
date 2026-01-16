@@ -97,6 +97,8 @@ struct TextRender {
     glm::mat4 model; 
     glm::mat4 proj;
     std::map<char, Character> characters;
+    int maxWidth;
+    int maxHeight;
     static bool initalized;
     static Shader shader;
 
