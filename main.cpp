@@ -61,10 +61,12 @@ int main()
     glm::vec4 colShade(0.15f,0.49f,0.75f,0.75f);
     Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
     LineArea lineA = LineArea(M_PI * 0.0, 0.2f, colShade, 0.025f);
+    Line lineB = Line(M_PI * 0.0, 0.2f, colShade, 0.025f);
     std::vector<float> data;
     data.push_back(0);
     data.push_back(1);
     data.push_back(1);
+    data.push_back(2);
     data.push_back(2);
     data.push_back(2);
 
@@ -75,14 +77,22 @@ int main()
     data.push_back(10);
     data.push_back(12);
 
-
+    std::vector<glm::vec3> dataLine;
+    dataLine.push_back(glm::vec3(0.0f,0.0f,0.0f));
+    dataLine.push_back(glm::vec3(1.0f, 1.0f, 0.0f));
+    dataLine.push_back(glm::vec3(2.0f, 2.0f, 0.0f));
+    dataLine.push_back(glm::vec3(3.0f, 3.0f, 0.0f));
+    dataLine.push_back(glm::vec3(4.0f, 4.0f, 0.0f));
+    dataLine.push_back(glm::vec3(5.0f, 5.0f, 0.0f));
+    dataLine.push_back(glm::vec3(6.0f, 6.0f, 0.0f));
+    dataLine.push_back(glm::vec3(7.0f, 7.0f, 0.0f));
     glm::mat4 view(1.0f);
     
     Figure fig;
     fig.SetXLabel("Label");
     fig.SetYLabel("Count");
-    fig.SetTextScale(0.0015f);
-    fig.Hist(data,0,10,10);
+    fig.SetTextScale(0.0008f);
+    fig.Plot(dataLine);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
     fig.SetPlotScale(0.0f, 0.0f, 0.0f);
     

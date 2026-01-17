@@ -270,7 +270,6 @@ bool Line::initalized = false;
 Shader Line::shader = Shader();
 Line::Line(float _angle, float _thickness, glm::vec4 _rgba ,float _antiAliasing){
     if(!Line::initalized){
-        std::cout << "Line Not INIT"<< std::endl;
         Line::shader.Load("../shaders/LineVertex.vs","../shaders/LineFragment.fs","../shaders/LineGeometry.gs");
         Line::initalized = true;
     }
@@ -573,9 +572,9 @@ void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, float sc
 
 Figure::Figure(){
     TextRender txtRender = TextRender();
-    xLabelScale = 0.003f;
-    yLabelScale = 0.003f;
-    zLabelScale = 0.003f;
+    xLabelScale = 0.002f;
+    yLabelScale = 0.002f;
+    zLabelScale = 0.002f;
     axisThickness = 0.008f;
     axisAntiAliasing = 0.003f;
     axisColor = glm::vec4(0.10f, 0.10f, 0.10f, 1.0f);
@@ -596,6 +595,8 @@ Figure::Figure(){
     dataMinY = 0.0f;
     dataMaxX = 1.0f;
     dataMinX = 0.0f;
+
+    plotType = PlotsType::NO_PLOT;
 
 }
 
@@ -632,6 +633,88 @@ void Figure::SetPlotScale(float xScale, float yScale, float zScale) {
 
 void Figure::SetPlotTranslate(float xTrans, float yTrans, float zTrans) {
     model = glm::translate(model, glm::vec3(xTrans, yTrans, zTrans));
+}
+
+void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int binCount) {
+    float binWidth = (binEnd - binStart) / binCount;
+    std::vector<int> count;
+    count.resize(binCount);
+    for (auto i = data.begin(); i != data.end(); i++) {
+        if (*i < binStart) {
+            count[0]++;
+            continue;
+        }
+        if (*i > binEnd) {
+            count[count.size() - 1]++;
+            continue;
+        }
+        for (int j = 0; j < count.size(); j++) {
+            if (*i <= (binWidth * j + binStart)) {
+                count[j] = count[j] + 1;
+                break;
+            }
+        }
+    }
+    std::vector<glm::vec3> hist;
+    for (int i = 0; i != count.size(); i++) {
+        hist.push_back(glm::vec3(binStart + binWidth * (float(i)), count[i], 0.0f));
+    }
+
+    PlotArea(hist);
+    return;
+}
+
+void Figure::Plot(std::vector<glm::vec3> points) {
+    auto it = points.begin();
+    dataMaxZ = (*it).z;
+    dataMinZ = (*it).z;
+    dataMaxY = (*it).y;
+    dataMinY = (*it).y;
+    dataMaxX = (*it).x;
+    dataMinX = (*it).x;
+    for (it = points.begin(); it != points.end(); it++) {
+        dataMaxZ = std::max(dataMaxZ, (*it).z);
+        dataMinZ = std::min(dataMinZ, (*it).z);
+        dataMaxY = std::max(dataMaxY, (*it).y);
+        dataMinY = std::min(dataMinY, (*it).y);
+        dataMaxX = std::max(dataMaxX, (*it).x);
+        dataMinX = std::min(dataMinX, (*it).x);
+    }
+    CalculateTicks();
+    CalculatePlotTransforms();
+
+    glm::vec3 first = (*points.begin());
+    glm::vec3 firstN = (*(points.begin() + 1));
+    glm::vec3 firstDir{ first[0] - firstN[0] + first[0], first[1] - firstN[1] + first[1], first[2] - firstN[2] + first[2] };
+
+    glm::vec3 last = (*(points.end() - 1));
+    glm::vec3 lastN = (*(points.end() - 2));
+    glm::vec3 lastDir{ last[0] - lastN[0] + last[0], last[1] - lastN[1] + last[1], last[2] - lastN[2] + last[2] };
+
+    points.insert(points.begin(), firstDir);
+
+    points.insert(points.end(), lastDir);
+
+    //Delete a older plot.
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec3), points.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    drawCount = points.size();
+    PlotsType plotType = PlotsType::LINE;
 }
 
 void Figure::PlotArea(std::vector<glm::vec3> points){
@@ -674,63 +757,36 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
     glBindVertexArray(0);
 
     drawCount = points.size();
-}
-
-void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int binCount){
-    float binWidth = (binEnd - binStart) / binCount;
-    std::vector<int> count;
-    count.resize(binCount);
-    for (auto i = data.begin(); i != data.end(); i++) {
-        if (*i < binStart) {
-            count[0]++;
-            continue;
-        }
-        if (*i > binEnd) {
-            count[count.size() - 1]++;
-            continue;
-        }
-        for (int j = 0; j < count.size(); j++) {
-            if (*i <= (binWidth*j + binStart)) {
-                count[j] = count[j] + 1;
-                break;
-            }
-        }
-    }
-    std::vector<glm::vec3> hist;
-    for (int i =0; i != count.size(); i++) {
-        hist.push_back(glm::vec3(binStart + binWidth * (float(i)), count[i], 0.0f));
-    }
-
-    PlotArea(hist);
-    return;
+    PlotsType plotType = PlotsType::LINE_AREA;
 }
 
 void Figure::CalculateTicks() {
     // Required becuase std::to_string() doesn't suppor presion setting.
     std::ostringstream oss;
-    float totalTicks = 9;
+    float totalTicks = 10;
     xTicks.resize(0);
     yTicks.resize(0);
     zTicks.resize(0);
     std::cout << dataMaxX << std::endl;
-    for (int i = 0; i <9; i++) {
-        float delta = (dataMaxX - dataMinX) / totalTicks;
+
+    for (int i = 0; i <=8; i++) {
+        float delta = (dataMaxX - dataMinX + 1) / 8;
         oss << std::setprecision(2) << float(dataMinX + delta *i);
         xTicks.push_back(Ticks{ oss.str(), 
-                                glm::vec3((1.0f/totalTicks) * i,0.0f,0.0f)});
+                         glm::vec3((1.0f/(8.0f)) * i,0.0f,0.0f)});
         oss.str("");
         //oss.clear();
     }
 
-    
-    for (int i = 0; i < 5; i++) {
-        float delta = (dataMaxY - dataMinY) / 5;
+    for (int i = 0; i <=8; i++) {
+        float delta = (dataMaxY - dataMinY + 1) / 8;
         oss << std::setprecision(2) << float(dataMinY + delta *i);
         yTicks.push_back(Ticks{ oss.str(), 
-                         glm::vec3(0.0f,(1.0f / 5)*i,0.0f) });
+                         glm::vec3((1.0f / 8.0f) * i,0.0f,0.0f) });
         oss.str("");
         //oss.clear();
     }
+
 }
 
 void Figure::CalculatePlotTransforms() {
@@ -746,47 +802,57 @@ void Figure::CalculatePlotTransforms() {
     if (dataDeltaZ == 0.0f) {
         dataDeltaZ = 1;
     }
-    glm::vec3 axisTranslate((thickness+ antiAliasing)/2.0f , (thickness + antiAliasing) / 2.0f, 0);
-    glm::vec3 axisScales(1.0f / dataDeltaX * (1.0f - ((thickness + antiAliasing) / 2.0f)), 
-                         1.0f / dataDeltaY * (1.0f - ((thickness + antiAliasing) / 2.0f)),
-                         1.0f / dataDeltaZ * (1.0f - ((thickness + antiAliasing) / 2.0f)));
+    glm::vec3 axisTranslate((axisThickness + axisAntiAliasing)/2.0f , (axisThickness + axisAntiAliasing) / 2.0f, 0);
+    glm::vec3 axisScales(1.0f / dataDeltaX * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)),
+                         1.0f / dataDeltaY * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)),
+                         1.0f / dataDeltaZ * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)));
 
     correctionPlotMat = glm::scale(glm::translate(glm::mat4(1.0f), axisTranslate), axisScales);
 
 }
 
-void Figure::Draw(glm::mat4 proj){
-    glm::mat4 correctionMat = glm::scale(glm::translate(glm::mat4(1.0f),glm::vec3(0.08f,0.08f,0.0f)),glm::vec3(0.85f,0.85f,1.0f));
+void Figure::Draw(glm::mat4 proj) {
+    glm::mat4 correctionMat = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.08f, 0.08f, 0.0f)), glm::vec3(0.85f, 0.85f, 1.0f));
     glm::mat4 mvp = proj * correctionMat;
 
     //Draw Text
-    txtRender.Draw(mvp,glm::vec2(0.5f,0.0f),-M_PI/2,yLabelScale,yLabel, glm::vec4( 0.10f, 0.10f, 0.10f,1.0f));
-    txtRender.Draw(mvp,glm::vec2(0.5f,-0.085f), 0.0f,xLabelScale,xLabel, glm::vec4(0.10f, 0.10f, 0.10f,1.0f));
+    txtRender.Draw(mvp, glm::vec2(0.5f, float(txtRender.maxWidth) * 0.0005f), -M_PI / 2, yLabelScale, yLabel, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+    txtRender.Draw(mvp, glm::vec2(0.5f, -float(txtRender.maxHeight) * 0.0005f - float(txtRender.maxHeight) * xLabelScale), 0.0f, xLabelScale, xLabel, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
     //Draw Axis Lines;
     axis.Draw(mvp);
     //Draw Ticks
     //mvp = proj * correctionMat * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -thickness - antiAliasing- float(txtRender.maxHeight), 0.0f));
-    
+
     for (auto it = xTicks.begin(); it != xTicks.end(); it++) {
-        txtRender.Draw(mvp, glm::vec2((*it).position.x, (*it).position.y-thickness - antiAliasing- float(txtRender.maxHeight)), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+        txtRender.Draw(mvp, glm::vec2((*it).position.x, (*it).position.y  - float(txtRender.maxHeight) * 0.0005f), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
     }
     //mvp = proj * correctionMat * glm::translate(glm::mat4(1.0f), glm::vec3(-thickness - antiAliasing- float(txtRender.maxWidth),0.0f, 0.0f));
     for (auto it = yTicks.begin(); it != yTicks.end(); it++) {
-        txtRender.Draw(mvp, glm::vec2((*it).position.x -thickness - antiAliasing- float(txtRender.maxWidth), (*it).position.y), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+        txtRender.Draw(mvp, glm::vec2((*it).position.y - float(txtRender.maxWidth) * 0.5f * 0.0005f, (*it).position.x - float(txtRender.maxHeight) * 0.5f * 0.0005f), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
     }
     //Draw Data
     /*
-    *  Need to calcualte any space lost due to thickness of 
+    *  Need to calcualte any space lost due to thickness of
     */
     mvp = proj * correctionMat * correctionPlotMat;
-    unsigned int ID = LineArea::shader.ID;
+    unsigned int ID = Line::shader.ID;
+    GLenum mode = GL_LINE_STRIP_ADJACENCY;
+    if (plotType == PlotsType::LINE_AREA) {
+        ID = LineArea::shader.ID;
+        mode = GL_LINE_STRIP;
+    }
+    else if (plotType == PlotsType::LINE) {
+        ID = Line::shader.ID;
+        mode = GL_LINE_STRIP_ADJACENCY;
+    }
+
     glUseProgram(ID);
     glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);
-    glUniform1fv(glGetUniformLocation(ID, "antialias"), 1, &antiAliasing);
-    glUniform1fv(glGetUniformLocation(ID, "thickness"), 1, &thickness);
+    glUniform1f(glGetUniformLocation(ID, "antialias"), antiAliasing);
+    glUniform1f(glGetUniformLocation(ID, "thickness"),  thickness );
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"), 1, false, &model[0][0]);
     glUniform4fv(glGetUniformLocation(ID, "color"), 1, &rgba[0]);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_LINE_STRIP, 0, drawCount);
+    glDrawArrays(mode, 0, drawCount);
     glBindVertexArray(0);
 }

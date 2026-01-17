@@ -115,6 +115,7 @@ struct Ticks {
 };
 
 enum class PlotsType : unsigned int {
+    NO_PLOT,
     LINE_SEGMENTS,
     LINE,
     LINE_AREA,
@@ -182,6 +183,8 @@ struct Figure {
     float xLabelScale;
     float yLabelScale;
     float zLabelScale;
+
+    PlotsType plotType;
 
     Figure();
     ~Figure();
