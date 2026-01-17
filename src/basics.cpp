@@ -36,6 +36,18 @@ unsigned int indices[] = {  // note that we start from 0!
 //bool Line::initalized = false;
 //unsigned int Line::shader = 0;
 
+int RoundUp(int numToRound, int multiple)
+{
+    if (multiple == 0)
+        return numToRound;
+
+    int remainder = numToRound % multiple;
+    if (remainder == 0)
+        return numToRound;
+
+    return numToRound + multiple - remainder;
+}
+
 void checkCompileErrors(unsigned int shader, std::string type)
 {
     int success;
@@ -767,22 +779,27 @@ void Figure::CalculateTicks() {
     xTicks.resize(0);
     yTicks.resize(0);
     zTicks.resize(0);
-    std::cout << dataMaxX << std::endl;
-
-    for (int i = 0; i <=8; i++) {
-        float delta = (dataMaxX - dataMinX + 1) / 8;
+    /*
+    * Need to add rules to take into account power of 10 ie. round max 
+    * delta to neartherst tenth, hundres, thousands, ... .
+    */
+    //int totalXTicks = int(dataMaxX-dataMinX);
+    int totalXTicks = (dataMaxX-dataMinX)/1;
+    for (int i = 0; i <=totalXTicks; i++) {
+        float delta = (dataMaxX - dataMinX) / totalXTicks;
         oss << std::setprecision(2) << float(dataMinX + delta *i);
         xTicks.push_back(Ticks{ oss.str(), 
-                         glm::vec3((1.0f/(8.0f)) * i,0.0f,0.0f)});
+                         glm::vec3((1.0f/float(totalXTicks)) * i,0.0f,0.0f)});
         oss.str("");
         //oss.clear();
     }
 
-    for (int i = 0; i <=8; i++) {
-        float delta = (dataMaxY - dataMinY + 1) / 8;
+    int totalYTicks = (dataMaxY-dataMinY)/1;
+    for (int i = 0; i <=totalYTicks; i++) {
+        float delta = (dataMaxY - dataMinY) / totalYTicks;
         oss << std::setprecision(2) << float(dataMinY + delta *i);
         yTicks.push_back(Ticks{ oss.str(), 
-                         glm::vec3((1.0f / 8.0f) * i,0.0f,0.0f) });
+                         glm::vec3((1.0f / totalYTicks) * i,0.0f,0.0f) });
         oss.str("");
         //oss.clear();
     }
@@ -808,7 +825,7 @@ void Figure::CalculatePlotTransforms() {
                          1.0f / dataDeltaZ * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)));
 
     correctionPlotMat = glm::scale(glm::translate(glm::mat4(1.0f), axisTranslate), axisScales);
-
+    thicknessCorrection = dataDeltaX * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f));
 }
 
 void Figure::Draw(glm::mat4 proj) {
@@ -848,8 +865,8 @@ void Figure::Draw(glm::mat4 proj) {
 
     glUseProgram(ID);
     glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);
-    glUniform1f(glGetUniformLocation(ID, "antialias"), antiAliasing);
-    glUniform1f(glGetUniformLocation(ID, "thickness"),  thickness );
+    glUniform1f(glGetUniformLocation(ID, "antialias"), antiAliasing * thicknessCorrection);
+    glUniform1f(glGetUniformLocation(ID, "thickness"),  thickness* thicknessCorrection );
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"), 1, false, &model[0][0]);
     glUniform4fv(glGetUniformLocation(ID, "color"), 1, &rgba[0]);
     glBindVertexArray(VAO);

@@ -149,6 +149,7 @@ struct Figure {
     float axisThickness;
     float axisAntiAliasing;
 
+
     glm::vec3 point;
     float length;
     glm::mat4 model;
@@ -157,6 +158,10 @@ struct Figure {
     glm::vec2 resolution;
     float antiAliasing;
     //Should this be static? UV don't change
+
+    float thicknessCorrection;
+    float antiAliasingCorrection;
+
     int drawCount;
     unsigned int VAO;
     unsigned int VBO;

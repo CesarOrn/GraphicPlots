@@ -86,6 +86,18 @@ int main()
     dataLine.push_back(glm::vec3(5.0f, 5.0f, 0.0f));
     dataLine.push_back(glm::vec3(6.0f, 6.0f, 0.0f));
     dataLine.push_back(glm::vec3(7.0f, 7.0f, 0.0f));
+    dataLine.push_back(glm::vec3(8.0f, 8.0f, 0.0f));
+    dataLine.push_back(glm::vec3(9.0f, 9.0f, 0.0f));
+    dataLine.push_back(glm::vec3(10.0f, 10.0f, 0.0f));
+    dataLine.push_back(glm::vec3(11.0f, 11.0f, 0.0f));
+    dataLine.push_back(glm::vec3(12.0f, 12.0f, 0.0f));
+    dataLine.push_back(glm::vec3(13.0f, 13.0f, 0.0f));
+    dataLine.push_back(glm::vec3(14.0f, 14.0f, 0.0f));
+    dataLine.push_back(glm::vec3(15.0f, 10.0f, 0.0f));
+    dataLine.push_back(glm::vec3(16.0f, 11.0f, 0.0f));
+    dataLine.push_back(glm::vec3(17.0f, 12.0f, 0.0f));
+    dataLine.push_back(glm::vec3(18.0f, 13.0f, 0.0f));
+    dataLine.push_back(glm::vec3(19.0f, 14.0f, 0.0f));
     glm::mat4 view(1.0f);
     
     Figure fig;
