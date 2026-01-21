@@ -733,12 +733,12 @@ void Figure::Plot(std::vector<glm::vec3> points) {
     glBindVertexArray(0);
 
     drawCount = points.size();
-    PlotsType plotType = PlotsType::LINE;
+    plotType = PlotsType::LINE;
 }
 
 void Figure::PlotArea(std::vector<glm::vec3> points){
 
-
+    std::cout << "Plot area" << std::endl;
     auto it = points.begin();
     dataMaxZ = (*it).z;
     dataMinZ = (*it).z;
@@ -776,7 +776,7 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
     glBindVertexArray(0);
 
     drawCount = points.size();
-    PlotsType plotType = PlotsType::LINE_AREA;
+    plotType = PlotsType::LINE_AREA;
 }
 
 void Figure::CalculateTicks() {
@@ -798,12 +798,11 @@ void Figure::CalculateTicks() {
     }
     int xStep = std::ceil(totalXDelta / std::pow(10, multiple));
     totalXDelta = std::ceil(totalXDelta / std::pow(10, multiple)) * std::pow(10, multiple);
-    std::cout << totalXDelta << std::endl;
     for (int i = 0; i <= xStep; i++) {
         float delta = totalXDelta / xStep;
         oss << std::setprecision(2) << float(dataMinX + delta *i);
         xTicks.push_back(Ticks{ oss.str(), 
-                         glm::vec3((1.0f/float(xStep)) * i,0.0f,0.0f)});
+                         glm::vec3((1.0f/xStep) * i,0.0f,0.0f)});
         oss.str("");
         //oss.clear();
     }
@@ -877,8 +876,7 @@ void Figure::Draw(glm::mat4 proj) {
     if (plotType == PlotsType::LINE_AREA) {
         ID = LineArea::shader.ID;
         mode = GL_LINE_STRIP;
-    }
-    else if (plotType == PlotsType::LINE) {
+    }else if (plotType == PlotsType::LINE) {
         ID = Line::shader.ID;
         mode = GL_LINE_STRIP_ADJACENCY;
     }

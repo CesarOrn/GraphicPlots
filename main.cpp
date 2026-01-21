@@ -63,8 +63,8 @@ int main()
     Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
     LineArea lineA = LineArea(M_PI * 0.0, 0.2f, colShade, 0.025f);
     Line lineB = Line(M_PI * 0.0, 0.2f, colShade, 0.025f);
-    H5::H5File file("../test/data/CV/TestData.h5", H5F_ACC_RDONLY);
-    H5::DataSet dataset = file.openDataSet("/Pol2");
+    H5::H5File file("../test/data/Photo/TestData.h5", H5F_ACC_RDONLY);
+    H5::DataSet dataset = file.openDataSet("/Pol1");
 
     H5::DataSpace dataspace = dataset.getSpace();
     hsize_t dims[2];
@@ -77,7 +77,7 @@ int main()
     // Read the data from the dataset into the memory buffer
     // The PredType::NATIVE_INT specifies the type in memory (C++ int)
     dataset.read(data_out.data(), H5::PredType::NATIVE_FLOAT);
-
+    std::cout << data_out[0] << std::endl;
  
     glm::mat4 view(1.0f);
     
@@ -86,7 +86,7 @@ int main()
     fig.SetYLabel("Count");
     fig.SetTextScale(0.0006f);
     fig.SetTickScale(0.00035f);
-    fig.Hist(data_out,0, 65535,100);
+    fig.Hist(data_out,0, 65535,200);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
     fig.SetPlotScale(0.0f, 0.0f, 0.0f);
     
