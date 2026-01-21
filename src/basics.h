@@ -188,6 +188,9 @@ struct Figure {
     float xLabelScale;
     float yLabelScale;
     float zLabelScale;
+    float xTickScale;
+    float yTickScale;
+    float zTickScale;
 
     PlotsType plotType;
 
@@ -199,6 +202,7 @@ struct Figure {
     void SetYLabel(std::string yLabel);
     void SetZLabel(std::string zLabel);
     void SetTextScale(float scale);
+    void SetTickScale(float scale);
 
     void SetPlotScale(float xScale, float yScale, float zScale);
     void SetPlotTranslate(float xTrans, float yTrans, float zTrans);

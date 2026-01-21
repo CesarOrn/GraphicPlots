@@ -45,7 +45,8 @@ else()
     find_package(Freetype REQUIRED)
 endif()
 
-
+find_package(HDF5 REQUIRED COMPONENTS CXX)
+include_directories( ${HDF5_INCLUDE_DIRS})
 
 # Sources (adjust paths as needed)
 add_executable(${PROJECT_NAME} main.cpp ${GLAD_SRC} ${PROJ_SRC}) 
@@ -56,9 +57,9 @@ add_executable(${PROJECT_NAME} main.cpp ${GLAD_SRC} ${PROJ_SRC})
 #in
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw3 freetype)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw3 freetype hdf5::hdf5_cpp HDF5::HDF5)
 else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw Freetype::Freetype)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL glfw Freetype::Freetype hdf5::hdf5_cpp HDF5::HDF5)
 endif()
 
 

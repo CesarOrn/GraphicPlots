@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "src/basics.h"
+#include <H5Cpp.h>
 #include <cmath>
 
 #include <iostream>
@@ -62,49 +63,30 @@ int main()
     Segment segment = Segment(point,1.0f,0.0f,1.0f,col,0.05f);
     LineArea lineA = LineArea(M_PI * 0.0, 0.2f, colShade, 0.025f);
     Line lineB = Line(M_PI * 0.0, 0.2f, colShade, 0.025f);
-    std::vector<float> data;
-    data.push_back(0);
-    data.push_back(1);
-    data.push_back(1);
-    data.push_back(2);
-    data.push_back(2);
-    data.push_back(2);
+    H5::H5File file("../test/data/CV/TestData.h5", H5F_ACC_RDONLY);
+    H5::DataSet dataset = file.openDataSet("/Pol2");
 
-    data.push_back(9);
-    data.push_back(9);
-    data.push_back(9);
-    data.push_back(9);
-    data.push_back(10);
-    data.push_back(12);
+    H5::DataSpace dataspace = dataset.getSpace();
+    hsize_t dims[2];
+    int rank = dataspace.getSimpleExtentDims(dims, NULL);
+    hsize_t dataset_size = dims[0] * dims[1];
 
-    std::vector<glm::vec3> dataLine;
-    dataLine.push_back(glm::vec3(0.0f,0.0f,0.0f));
-    dataLine.push_back(glm::vec3(1.0f, 1.0f, 0.0f));
-    dataLine.push_back(glm::vec3(2.0f, 2.0f, 0.0f));
-    dataLine.push_back(glm::vec3(3.0f, 3.0f, 0.0f));
-    dataLine.push_back(glm::vec3(4.0f, 4.0f, 0.0f));
-    dataLine.push_back(glm::vec3(5.0f, 5.0f, 0.0f));
-    dataLine.push_back(glm::vec3(6.0f, 6.0f, 0.0f));
-    dataLine.push_back(glm::vec3(7.0f, 7.0f, 0.0f));
-    dataLine.push_back(glm::vec3(8.0f, 8.0f, 0.0f));
-    dataLine.push_back(glm::vec3(9.0f, 9.0f, 0.0f));
-    dataLine.push_back(glm::vec3(10.0f, 10.0f, 0.0f));
-    dataLine.push_back(glm::vec3(11.0f, 11.0f, 0.0f));
-    dataLine.push_back(glm::vec3(12.0f, 12.0f, 0.0f));
-    dataLine.push_back(glm::vec3(13.0f, 13.0f, 0.0f));
-    dataLine.push_back(glm::vec3(14.0f, 14.0f, 0.0f));
-    dataLine.push_back(glm::vec3(15.0f, 10.0f, 0.0f));
-    dataLine.push_back(glm::vec3(16.0f, 11.0f, 0.0f));
-    dataLine.push_back(glm::vec3(17.0f, 12.0f, 0.0f));
-    dataLine.push_back(glm::vec3(18.0f, 13.0f, 0.0f));
-    dataLine.push_back(glm::vec3(19.0f, 14.0f, 0.0f));
+    // Create a buffer (e.g., std::vector) in memory to hold the data
+    std::vector<float> data_out;
+    data_out.resize(dataset_size);
+    // Read the data from the dataset into the memory buffer
+    // The PredType::NATIVE_INT specifies the type in memory (C++ int)
+    dataset.read(data_out.data(), H5::PredType::NATIVE_FLOAT);
+
+ 
     glm::mat4 view(1.0f);
     
     Figure fig;
     fig.SetXLabel("Label");
     fig.SetYLabel("Count");
-    fig.SetTextScale(0.0008f);
-    fig.Plot(dataLine);
+    fig.SetTextScale(0.0006f);
+    fig.SetTickScale(0.00035f);
+    fig.Hist(data_out,0, 65535,100);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
     fig.SetPlotScale(0.0f, 0.0f, 0.0f);
     

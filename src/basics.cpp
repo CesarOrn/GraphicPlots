@@ -639,6 +639,12 @@ void Figure::SetTextScale(float scale){
     zLabelScale = scale;
 }
 
+void Figure::SetTickScale(float scale) {
+    xTickScale = scale;
+    yTickScale = scale;
+    zTickScale = scale;
+}
+
 void Figure::SetPlotScale(float xScale, float yScale, float zScale) {
     model = glm::scale(model,glm::vec3(xScale, yScale, zScale));
 }
@@ -649,6 +655,7 @@ void Figure::SetPlotTranslate(float xTrans, float yTrans, float zTrans) {
 
 void Figure::Hist(std::vector<float> data, float binStart, float binEnd, int binCount) {
     float binWidth = (binEnd - binStart) / binCount;
+    std::cout << binWidth << std::endl;
     std::vector<int> count;
     count.resize(binCount);
     for (auto i = data.begin(); i != data.end(); i++) {
@@ -784,22 +791,35 @@ void Figure::CalculateTicks() {
     * delta to neartherst tenth, hundres, thousands, ... .
     */
     //int totalXTicks = int(dataMaxX-dataMinX);
-    int totalXTicks = (dataMaxX-dataMinX)/1;
-    for (int i = 0; i <=totalXTicks; i++) {
-        float delta = (dataMaxX - dataMinX) / totalXTicks;
+    float totalXDelta = dataMaxX-dataMinX;
+    int multiple = 1;
+    while (totalXDelta/ std::pow(10,multiple)  >10.0f) {
+        multiple = multiple + 1.0f;
+    }
+    int xStep = std::ceil(totalXDelta / std::pow(10, multiple));
+    totalXDelta = std::ceil(totalXDelta / std::pow(10, multiple)) * std::pow(10, multiple);
+    std::cout << totalXDelta << std::endl;
+    for (int i = 0; i <= xStep; i++) {
+        float delta = totalXDelta / xStep;
         oss << std::setprecision(2) << float(dataMinX + delta *i);
         xTicks.push_back(Ticks{ oss.str(), 
-                         glm::vec3((1.0f/float(totalXTicks)) * i,0.0f,0.0f)});
+                         glm::vec3((1.0f/float(xStep)) * i,0.0f,0.0f)});
         oss.str("");
         //oss.clear();
     }
-
-    int totalYTicks = (dataMaxY-dataMinY)/1;
-    for (int i = 0; i <=totalYTicks; i++) {
-        float delta = (dataMaxY - dataMinY) / totalYTicks;
+    multiple = 1;
+    int totalYDelta = (dataMaxY-dataMinY);
+    while (totalYDelta / std::pow(10, multiple) > 10.0f) {
+        multiple = multiple + 1.0f;
+    }
+    int yStep = std::ceil(totalYDelta / std::pow(10, multiple));
+    totalYDelta = std::ceil(totalYDelta / std::pow(10, multiple)) * std::pow(10, multiple);
+    std::cout << totalYDelta << std::endl;
+    for (int i = 0; i <= yStep; i++) {
+        float delta = totalYDelta / yStep;
         oss << std::setprecision(2) << float(dataMinY + delta *i);
         yTicks.push_back(Ticks{ oss.str(), 
-                         glm::vec3((1.0f / totalYTicks) * i,0.0f,0.0f) });
+                         glm::vec3((1.0f / yStep) * i,0.0f,0.0f) });
         oss.str("");
         //oss.clear();
     }
@@ -841,11 +861,11 @@ void Figure::Draw(glm::mat4 proj) {
     //mvp = proj * correctionMat * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -thickness - antiAliasing- float(txtRender.maxHeight), 0.0f));
 
     for (auto it = xTicks.begin(); it != xTicks.end(); it++) {
-        txtRender.Draw(mvp, glm::vec2((*it).position.x, (*it).position.y  - float(txtRender.maxHeight) * 0.0005f), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+        txtRender.Draw(mvp, glm::vec2((*it).position.x, (*it).position.y  - float(txtRender.maxHeight) * xTickScale), 0.0f, xTickScale, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
     }
     //mvp = proj * correctionMat * glm::translate(glm::mat4(1.0f), glm::vec3(-thickness - antiAliasing- float(txtRender.maxWidth),0.0f, 0.0f));
     for (auto it = yTicks.begin(); it != yTicks.end(); it++) {
-        txtRender.Draw(mvp, glm::vec2((*it).position.y - float(txtRender.maxWidth) * 0.5f * 0.0005f, (*it).position.x - float(txtRender.maxHeight) * 0.5f * 0.0005f), 0.0f, 0.0005f, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
+        txtRender.Draw(mvp, glm::vec2((*it).position.y - float(txtRender.maxWidth) * 0.5f * 0.0005f, (*it).position.x - float(txtRender.maxHeight) * 0.5f * yTickScale), 0.0f, yTickScale, (*it).text, glm::vec4(0.10f, 0.10f, 0.10f, 1.0f));
     }
     //Draw Data
     /*
