@@ -85,7 +85,7 @@ int main()
     fig.SetXLabel("Label");
     fig.SetYLabel("Count");
     fig.SetTextScale(0.0006f);
-    fig.SetTickScale(0.00035f);
+    fig.SetTickScale(0.00055f);
     fig.Hist(data_out,0, 65535,200);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
     fig.SetPlotScale(0.0f, 0.0f, 0.0f);
@@ -123,8 +123,9 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -139,11 +140,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     float aspectRatio = (float)width / (float)height;
     if (aspectRatio >=1) {
         proj = glm::ortho(0.0f, aspectRatio, 0.0f, 1.0f, 0.0f, 1.0f);
-    }
-    else {
+    }else {
         proj = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f / aspectRatio, 0.0f, 1.0f);
     }
     //
-    //proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
+    //proj = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
 }
 

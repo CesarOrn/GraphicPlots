@@ -149,7 +149,6 @@ struct Figure {
     float axisThickness;
     float axisAntiAliasing;
 
-
     glm::vec3 point;
     float length;
     glm::mat4 model;
@@ -175,6 +174,7 @@ struct Figure {
     float dataMaxX;
     float dataMinX;
     glm::mat4 correctionPlotMat;
+    glm::mat4 correctionAxisMat;
 
     //Scale of plots
     float minX;
@@ -203,6 +203,7 @@ struct Figure {
     void SetZLabel(std::string zLabel);
     void SetTextScale(float scale);
     void SetTickScale(float scale);
+    void SetAxisScale(float scale);
 
     void SetPlotScale(float xScale, float yScale, float zScale);
     void SetPlotTranslate(float xTrans, float yTrans, float zTrans);

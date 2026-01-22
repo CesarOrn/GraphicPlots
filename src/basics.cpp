@@ -447,7 +447,7 @@ void TextRender::LoadChar(){
         return;
     }
     else {
-        // set size to load glyphs as
+        // set size to load glyphs as. 0 mean default to other one.
         FT_Set_Pixel_Sizes(face, 0, 64);
 
         // disable byte-alignment restriction
@@ -462,7 +462,9 @@ void TextRender::LoadChar(){
                 std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
                 continue;
             }
-            // generate texture
+            // generate hight resolution glyph
+
+            //write 32 x32 glyph sdf to GPU.
             unsigned int texture;
             glGenTextures(1, &texture);
             glBindTexture(GL_TEXTURE_2D, texture);
@@ -587,10 +589,10 @@ Figure::Figure(){
     xLabelScale = 0.002f;
     yLabelScale = 0.002f;
     zLabelScale = 0.002f;
-    axisThickness = 0.008f;
-    axisAntiAliasing = 0.003f;
+    axisThickness = 0.0035f;
+    axisAntiAliasing = 0.0001f;
     axisColor = glm::vec4(0.10f, 0.10f, 0.10f, 1.0f);
-    axis = Line(M_PI * 0.0, 0.008f, axisColor, 0.003f);
+    axis = Line(M_PI * 0.0, axisThickness, axisColor, axisAntiAliasing);
     axis.AddPoint(glm::vec3(0.0f, 1.0f, 0.0f));
     axis.AddPoint(glm::vec3(0.0f, 0.0f, 0.0f));
     axis.AddPoint(glm::vec3(1.0f, 0.0f, 0.0f));
@@ -643,6 +645,11 @@ void Figure::SetTickScale(float scale) {
     xTickScale = scale;
     yTickScale = scale;
     zTickScale = scale;
+}
+
+void Figure::SetAxisScale(float scale) {
+    axis.thickness = scale;
+    axisThickness = scale;
 }
 
 void Figure::SetPlotScale(float xScale, float yScale, float zScale) {
@@ -800,7 +807,7 @@ void Figure::CalculateTicks() {
     totalXDelta = std::ceil(totalXDelta / std::pow(10, multiple)) * std::pow(10, multiple);
     for (int i = 0; i <= xStep; i++) {
         float delta = totalXDelta / xStep;
-        oss << std::setprecision(2) << float(dataMinX + delta *i);
+        oss << std::setprecision(2) << float(dataMinX + i);
         xTicks.push_back(Ticks{ oss.str(), 
                          glm::vec3((1.0f/xStep) * i,0.0f,0.0f)});
         oss.str("");
@@ -816,13 +823,13 @@ void Figure::CalculateTicks() {
     std::cout << totalYDelta << std::endl;
     for (int i = 0; i <= yStep; i++) {
         float delta = totalYDelta / yStep;
-        oss << std::setprecision(2) << float(dataMinY + delta *i);
+        oss << std::setprecision(2) << float(dataMinY + i);
         yTicks.push_back(Ticks{ oss.str(), 
                          glm::vec3((1.0f / yStep) * i,0.0f,0.0f) });
         oss.str("");
         //oss.clear();
     }
-
+    correctionAxisMat = glm::scale(glm::mat4(1.0f), glm::vec3((dataMaxX - dataMinX)/ totalXDelta,(dataMaxY - dataMinY)/ totalYDelta,1.0f));
 }
 
 void Figure::CalculatePlotTransforms() {
@@ -870,7 +877,7 @@ void Figure::Draw(glm::mat4 proj) {
     /*
     *  Need to calcualte any space lost due to thickness of
     */
-    mvp = proj * correctionMat * correctionPlotMat;
+    mvp = proj * correctionMat * correctionPlotMat* correctionAxisMat;
     unsigned int ID = Line::shader.ID;
     GLenum mode = GL_LINE_STRIP_ADJACENCY;
     if (plotType == PlotsType::LINE_AREA) {
