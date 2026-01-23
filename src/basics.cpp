@@ -30,9 +30,9 @@ unsigned int indices[] = {  // note that we start from 0!
 unsigned int findClosest( unsigned char const* data, unsigned int x, unsigned int y, unsigned int width, unsigned int height, int spread) {
     //Note: distance will be normalized between 0 and 1 where 1
     // is within the text.
-    int xMin = std::max(unsigned int(0), x - spread);
+    int xMin = std::max(static_cast<unsigned int>(0), x - spread);
     int xMax = std::min(width, y + spread);
-    int yMin = std::max(unsigned int(0), y - spread);
+    int yMin = std::max(static_cast<unsigned int>(0), y - spread);
     int yMax = std::min(height, y + spread);
     float distance = 0;
     for (size_t j = yMin; j < yMax; j++) {
