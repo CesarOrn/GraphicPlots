@@ -85,7 +85,7 @@ int main()
     fig.SetXLabel("Label");
     fig.SetYLabel("Count");
     fig.SetTextScale(0.0006f);
-    fig.SetTickScale(0.00055f);
+    fig.SetTickScale(0.0006f);
     fig.Hist(data_out,0, 65535,200);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
     fig.SetPlotScale(0.0f, 0.0f, 0.0f);

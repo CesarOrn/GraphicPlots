@@ -27,6 +27,30 @@ unsigned int indices[] = {  // note that we start from 0!
     0, 2, 3   // second Triangle
 };
 
+unsigned int findClosest( unsigned char const* data, unsigned int x, unsigned int y, unsigned int width, unsigned int height, int spread) {
+    //Note: distance will be normalized between 0 and 1 where 1
+    // is within the text.
+    int xMin = std::max(unsigned int(0), x - spread);
+    int xMax = std::min(width, y + spread);
+    int yMin = std::max(unsigned int(0), y - spread);
+    int yMax = std::min(height, y + spread);
+    float distance = 0;
+    for (size_t j = yMin; j < yMax; j++) {
+        for (size_t i = xMin; i < xMax; i++)
+        {
+            if (data[i + width* j] == 0) {
+                continue;
+            }
+            int distX = x - i;
+            int distY = y - j;
+            int currDistance = 1 - std::sqrt(distX * distX + distY * distY) / double(spread);
+            if (distance < currDistance) {
+                distance = currDistance;
+            }
+        }
+    }
+    return distance * 255;
+}
 
 
 
@@ -448,7 +472,8 @@ void TextRender::LoadChar(){
     }
     else {
         // set size to load glyphs as. 0 mean default to other one.
-        FT_Set_Pixel_Sizes(face, 0, 64);
+        int glyphSize = 64;
+        FT_Set_Pixel_Sizes(face, 0, glyphSize);
 
         // disable byte-alignment restriction
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -462,9 +487,10 @@ void TextRender::LoadChar(){
                 std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
                 continue;
             }
-            // generate hight resolution glyph
 
-            //write 32 x32 glyph sdf to GPU.
+            FT_GlyphSlot slot = face->glyph;
+            FT_Render_Glyph(slot, FT_RENDER_MODE_SDF);
+
             unsigned int texture;
             glGenTextures(1, &texture);
             glBindTexture(GL_TEXTURE_2D, texture);
@@ -472,12 +498,12 @@ void TextRender::LoadChar(){
                 GL_TEXTURE_2D,
                 0,
                 GL_RED,
-                face->glyph->bitmap.width,
-                face->glyph->bitmap.rows,
+                slot->bitmap.width,
+                slot->bitmap.rows,
                 0,
                 GL_RED,
                 GL_UNSIGNED_BYTE,
-                face->glyph->bitmap.buffer
+                slot->bitmap.buffer
             );
             // set texture options
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -784,6 +810,11 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
 
     drawCount = points.size();
     plotType = PlotsType::LINE_AREA;
+}
+
+void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta, float phi) {
+    //Approach is to make a texture
+
 }
 
 void Figure::CalculateTicks() {

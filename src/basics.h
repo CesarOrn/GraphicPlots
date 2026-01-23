@@ -216,6 +216,7 @@ struct Figure {
     void Hist(std::vector<float> data, float binStart, float binEnd,int binCount);
     void Plot(std::vector<glm::vec3> points);
     void PlotArea(std::vector<glm::vec3> points);
+    void PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta, float phi);
 
     //void CalculateFitTransform(std::vector<glm::vec3> points);
     void CalculateTicks();
