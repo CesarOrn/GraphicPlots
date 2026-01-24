@@ -53,31 +53,44 @@ unsigned int findClosest( unsigned char const* data, unsigned int x, unsigned in
 }
 
 
+float fftCoeff(float f, int p, int q, int n, int m) {
+    float coeff = 0.0f;
+    for (int k = 0; k < p; k++) {
+        for (int j = 0; j < q; j++) {
+            float x = 2 * M_PI * k / p;
+            float y = 2 * M_PI * j / q;
+            float val = f(x, y);
+            float firstExpo = n * 2* M_PI * k / p;
+            float secondExpo = m * 2 * M_PI * j / q;
+            coeff = coeff + val * cos(x) * cos(y) - sin(x) * sin(y)
+        }
+    }
+    coeff = 1.0f / (p * q) * coeff
+}
 
-chebfun2(float f){
+std::vector<float> chebfun2(float f){
     std::vector<float> 
     int n = 8;
     float tol = 10^-15;
     bool sw = true;
 
-    while (sw) {
-        int m = 2*n;
-        //std::vector<float>x;
-        //std::vector<float>y;
-        std::vector<float>z;
-        for(int k = 0; k < m; k ++){
-            float x = cos(2*k*M_PI/m);
-            float y = cos(2*k*M_PI/m);
-            z.push_back(f(x,y));
-        }
+    std::vector<float> coeff;
+
+    int m = 2*n;
+    //std::vector<float>x;
+    //std::vector<float>y;
+    std::vector<float>z;
+    for(int k = 0; k < m; k ++){
+        float x = cos(2*k*M_PI/m);
+        float y = cos(2*k*M_PI/m);
+        z.push_back(f(x,y));
     }
+    float g = FFT(z) / (m * m);
+
+    return coeff;
 }
 
-procedure chebfun2(f)
 
-7: x, y ← cos 2kπ
-m , k = 0 : m − 1
-8: z ← f (x, y)
 9: g ← F F T (z)/m2
 10: a ← 4ℜg(1 : n, 1 : n)
 11: a(1, 1) ← a(1, 1))/4
