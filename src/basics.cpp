@@ -54,6 +54,52 @@ unsigned int findClosest( unsigned char const* data, unsigned int x, unsigned in
 
 
 
+chebfun2(float f){
+    std::vector<float> 
+    int n = 8;
+    float tol = 10^-15;
+    bool sw = true;
+
+    while (sw) {
+        int m = 2*n;
+        //std::vector<float>x;
+        //std::vector<float>y;
+        std::vector<float>z;
+        for(int k = 0; k < m; k ++){
+            float x = cos(2*k*M_PI/m);
+            float y = cos(2*k*M_PI/m);
+            z.push_back(f(x,y));
+        }
+    }
+}
+
+procedure chebfun2(f)
+
+7: x, y ← cos 2kπ
+m , k = 0 : m − 1
+8: z ← f (x, y)
+9: g ← F F T (z)/m2
+10: a ← 4ℜg(1 : n, 1 : n)
+11: a(1, 1) ← a(1, 1))/4
+12: a(1, 2 : n) ← a(1, 2 : n)/2
+13: a(2 : n, 1) ← a(2 : n, 1)/2
+14: if |a(i − 1 : i, 1 : n)| < tol & |a(1 : n, i − 1 : i)| < tol then
+15: sw ← f alse
+16: else
+17: n ← 2n
+18: end if
+19: end while
+20: for i = 1 : n do ⊲ Removal of negligible coefficients
+21: for j = 1 : n do
+22: if |a(i, j)| < tol then
+23: a(i, j) ← 0
+24: end if
+25: end for
+26: end for
+27: return a
+28: end procedure
+
+
 //unsigned int Line::VAO = 0;
 //unsigned int Line::VBO = 0;
 //unsigned int Line::EBO = 0;
@@ -835,6 +881,7 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
     
 
     // Appoximate density of points using Kernel Density Estimation(KDE)
+    //https://arxiv.org/pdf/1504.04693
 
 }
 
