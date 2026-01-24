@@ -813,12 +813,33 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
 }
 
 void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta, float phi) {
-    //Approach is to make a texture
+    
+    for (int i = 0; i < quats.size(); i ++) {
+        //https://mompiou.github.io/pycotem/stereoproj/
+        //Rotate and project pole. 
+        glm::vec3 pole(0.0f, 0.0f, 1.0f);
+        pole = quats[0] * pole * glm::conjugate(quats[0]);
+
+        glm::vec3 dir = pole - glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec2 planePoint(dir.x / 1.0f + dir.z, dir.y / 1.0f + dir.z);
+        // https://towardsdatascience.com/kernel-density-estimator-for-multidimensional-data-3e78c9779ed8/
+        //Calculate KDE
+        glm::vec2 point(0- planePoint.x, 0- planePoint.y);
+        int dim = 2;
+        float bandwidth = 1.0f;
+        glm::mat2 H(1.0f);
+        glm::vec1 resExpo = point * (bandwidth * H) * point;
+        resExpo = resExpo * 0.5f;
+        float desnsity = glm::sqrt(2.0f * M_PI) * glm::sqrt(glm::determinant(H)) * glm::exp(resExpo.x);
+    }
+    
+
+    // Appoximate density of points using Kernel Density Estimation(KDE)
 
 }
 
 void Figure::CalculateTicks() {
-    // Required becuase std::to_string() doesn't suppor presion setting.
+    // Required becuase std::to_string() doesn't support presion setting.
     std::ostringstream oss;
     float totalTicks = 10;
     xTicks.resize(0);
