@@ -27,6 +27,8 @@ unsigned int indices[] = {  // note that we start from 0!
     0, 2, 3   // second Triangle
 };
 
+
+
 unsigned int findClosest( unsigned char const* data, unsigned int x, unsigned int y, unsigned int width, unsigned int height, int spread) {
     //Note: distance will be normalized between 0 and 1 where 1
     // is within the text.
@@ -53,71 +55,65 @@ unsigned int findClosest( unsigned char const* data, unsigned int x, unsigned in
 }
 
 
-float fftCoeff(float f, int p, int q, int n, int m) {
+float fftChebyCoeff(KDE& f, int p, int q, int n, int m) {
     float coeff = 0.0f;
     for (int k = 0; k < p; k++) {
         for (int j = 0; j < q; j++) {
             float x = 2 * M_PI * k / p;
             float y = 2 * M_PI * j / q;
-            float val = f(x, y);
-            float firstExpo = n * 2* M_PI * k / p;
-            float secondExpo = m * 2 * M_PI * j / q;
-            coeff = coeff + val * cos(x) * cos(y) - sin(x) * sin(y)
+            float val = f.F(cos(x), cos(y));
+            float firstExpo = cos(n * 2* M_PI * k / p);
+            float secondExpo = cos(m * 2 * M_PI * j / q);
+            coeff = coeff + val * cos(x) * cos(y) - sin(x) * sin(y);
         }
     }
-    coeff = 1.0f / (p * q) * coeff
+    coeff = (1.0f / (p * q)) * coeff;
+    return coeff;
 }
 
-std::vector<float> chebfun2(float f){
-    std::vector<float> 
+std::array<std::array<float,8>,8> chebfun2(KDE& f){
+ 
     int n = 8;
-    float tol = 10^-15;
-    bool sw = true;
-
-    std::vector<float> coeff;
+    std::array<std::array<float,8>,8> a;
 
     int m = 2*n;
     //std::vector<float>x;
     //std::vector<float>y;
     std::vector<float>z;
-    for(int k = 0; k < m; k ++){
-        float x = cos(2*k*M_PI/m);
-        float y = cos(2*k*M_PI/m);
-        z.push_back(f(x,y));
+    for(int i = 0; i < n; i++){
+        for(int j = 0; j < n; j++){
+            a[i][j] = 4 * fftChebyCoeff(f,20,20,i,j)/ (m*m);
+        }
     }
-    float g = FFT(z) / (m * m);
+    a[0][0] = a[0][0]/4.0f;
 
-    return coeff;
+    a[0][1] = a[0][1]/2.0f;
+    a[0][2] = a[0][2]/2.0f;
+    a[0][3] = a[0][3]/2.0f;
+    a[0][4] = a[0][4]/2.0f;
+    a[0][5] = a[0][5]/2.0f;
+    a[0][6] = a[0][6]/2.0f;
+    a[0][7] = a[0][7]/2.0f;
+    
+    a[1][0] = a[1][0]/2.0f;
+    a[2][0] = a[2][0]/2.0f;
+    a[3][0] = a[3][0]/2.0f;
+    a[4][0] = a[4][0]/2.0f;
+    a[5][0] = a[5][0]/2.0f;
+    a[6][0] = a[6][0]/2.0f;
+
+    return a;
 }
 
-
-9: g ← F F T (z)/m2
-10: a ← 4ℜg(1 : n, 1 : n)
-11: a(1, 1) ← a(1, 1))/4
-12: a(1, 2 : n) ← a(1, 2 : n)/2
-13: a(2 : n, 1) ← a(2 : n, 1)/2
-14: if |a(i − 1 : i, 1 : n)| < tol & |a(1 : n, i − 1 : i)| < tol then
-15: sw ← f alse
-16: else
-17: n ← 2n
-18: end if
-19: end while
-20: for i = 1 : n do ⊲ Removal of negligible coefficients
-21: for j = 1 : n do
-22: if |a(i, j)| < tol then
-23: a(i, j) ← 0
-24: end if
-25: end for
-26: end for
-27: return a
-28: end procedure
-
-
-//unsigned int Line::VAO = 0;
-//unsigned int Line::VBO = 0;
-//unsigned int Line::EBO = 0;
-//bool Line::initalized = false;
-//unsigned int Line::shader = 0;
+float shebeval2(std::array<std::array<float,8>,8> a, float x, float y){
+    float res = 0.0f;
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++){
+            res = res + a[i][j] * cos(i*acos(x))*cos(j*acos(y));
+        }
+    }
+    return res;
+}
 
 int RoundUp(int numToRound, int multiple)
 {
@@ -155,8 +151,22 @@ void checkCompileErrors(unsigned int shader, std::string type)
     }
 }
 
-
-
+void KDE::PushPoint(glm::vec2 point){
+    points.push_back(point);
+}
+float KDE::F(float x, float y){
+    float val = 0.0f;
+    for(int i = 0; i < points.size(); i++){
+        glm::vec2 point(x- points[i].x, y- points[i].y);
+        int dim = 2;
+        float bandwidth = 1.0f;
+        glm::mat2 H(1.0f);
+        glm::vec1 resExpo = point * (bandwidth * H) * point;
+        resExpo = resExpo * 0.5f;
+        val = val + glm::sqrt(2.0f * M_PI) * glm::sqrt(glm::determinant(H)) * glm::exp(resExpo.x);
+    }
+    return val;
+}
 
 Shader::Shader(){
 }
@@ -872,7 +882,8 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
 }
 
 void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta, float phi) {
-    
+    KDE kde;
+    // Project points to 0 z plane.
     for (int i = 0; i < quats.size(); i ++) {
         //https://mompiou.github.io/pycotem/stereoproj/
         //Rotate and project pole. 
@@ -880,18 +891,21 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
         pole = quats[0] * pole * glm::conjugate(quats[0]);
 
         glm::vec3 dir = pole - glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec2 planePoint(dir.x / 1.0f + dir.z, dir.y / 1.0f + dir.z);
-        // https://towardsdatascience.com/kernel-density-estimator-for-multidimensional-data-3e78c9779ed8/
-        //Calculate KDE
-        glm::vec2 point(0- planePoint.x, 0- planePoint.y);
-        int dim = 2;
-        float bandwidth = 1.0f;
-        glm::mat2 H(1.0f);
-        glm::vec1 resExpo = point * (bandwidth * H) * point;
-        resExpo = resExpo * 0.5f;
-        float desnsity = glm::sqrt(2.0f * M_PI) * glm::sqrt(glm::determinant(H)) * glm::exp(resExpo.x);
+        glm::vec2 planePoint(dir.x / (1.0f + dir.z), dir.y / (1.0f + dir.z));
+        
+        kde.PushPoint(planePoint);
     }
+    std::array<std::array<float,8>,8>coeff = chebfun2(kde);
     
+    for(int i = 0; i < 100; i++){
+        for(int j = 0; j < 100; j++){
+            float xStep = (2.0f/100)*i - 1.0f;
+            float yStep = (2.0f/100)*i - 1.0f;
+            std::cout<<"Error: "<< kde.F(xStep, yStep) - shebeval2(coeff,xStep,yStep) << std::endl; 
+        }
+    }
+
+    //Calculate KDE
 
     // Appoximate density of points using Kernel Density Estimation(KDE)
     //https://arxiv.org/pdf/1504.04693
