@@ -11,9 +11,11 @@
 #include <iomanip>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <H5Cpp.h>
 
 #include <ft2build.h>
-#include FT_FREETYPE_H  
+#include FT_FREETYPE_H
+  
 
 
 float uvs[] = {
@@ -59,22 +61,23 @@ float fftChebyCoeff(KDE& f, int p, int q, int n, int m) {
     float coeff = 0.0f;
     for (int k = 0; k < p; k++) {
         for (int j = 0; j < q; j++) {
-            float x = 2 * M_PI * k / p;
-            float y = 2 * M_PI * j / q;
+            float x = 2.0f * M_PI * float(k) / float(p);
+            float y = 2.0f * M_PI * float(j) / float(q);
+            // Evaluate at nodes
             float val = f.F(cos(x), cos(y));
-            float firstExpo = cos(n * 2* M_PI * k / p);
-            float secondExpo = cos(m * 2 * M_PI * j / q);
-            coeff = coeff + val * cos(x) * cos(y) - sin(x) * sin(y);
+            float firstExpo = -1.0f * float(n) * x;
+            float secondExpo= -1.0f * float(m) * y;
+            coeff = coeff + val * cos(firstExpo + secondExpo);
         }
     }
     coeff = (1.0f / (p * q)) * coeff;
     return coeff;
 }
 
-std::array<std::array<float,8>,8> chebfun2(KDE& f){
+std::array<std::array<float,256>,256> chebfun2(KDE& f){
  
-    int n = 8;
-    std::array<std::array<float,8>,8> a;
+    int n = 256;
+    std::array<std::array<float,256>,256> a;
 
     int m = 2*n;
     //std::vector<float>x;
@@ -82,33 +85,27 @@ std::array<std::array<float,8>,8> chebfun2(KDE& f){
     std::vector<float>z;
     for(int i = 0; i < n; i++){
         for(int j = 0; j < n; j++){
-            a[i][j] = 4 * fftChebyCoeff(f,20,20,i,j)/ (m*m);
+            a[i][j] = 4 * fftChebyCoeff(f,m,m,i,j);
         }
     }
+    
     a[0][0] = a[0][0]/4.0f;
 
-    a[0][1] = a[0][1]/2.0f;
-    a[0][2] = a[0][2]/2.0f;
-    a[0][3] = a[0][3]/2.0f;
-    a[0][4] = a[0][4]/2.0f;
-    a[0][5] = a[0][5]/2.0f;
-    a[0][6] = a[0][6]/2.0f;
-    a[0][7] = a[0][7]/2.0f;
-    
-    a[1][0] = a[1][0]/2.0f;
-    a[2][0] = a[2][0]/2.0f;
-    a[3][0] = a[3][0]/2.0f;
-    a[4][0] = a[4][0]/2.0f;
-    a[5][0] = a[5][0]/2.0f;
-    a[6][0] = a[6][0]/2.0f;
+    for(int i = 1 ; i < n; i ++){
+        a[0][i] = a[0][i]/2.0f;
+    }
 
+    for(int i = 1; i < n; i ++){
+        a[i][0] = a[i][0]/2.0f;
+    }
+    
     return a;
 }
 
-float shebeval2(std::array<std::array<float,8>,8> a, float x, float y){
+float shebeval2(std::array<std::array<float,256>,256> a, float x, float y){
     float res = 0.0f;
-    for(int i = 0; i < 8; i++){
-        for(int j = 0; j < 8; j++){
+    for(int i = 0; i <256; i++){
+        for(int j = 0; j < 256; j++){
             res = res + a[i][j] * cos(i*acos(x))*cos(j*acos(y));
         }
     }
@@ -157,15 +154,14 @@ void KDE::PushPoint(glm::vec2 point){
 float KDE::F(float x, float y){
     float val = 0.0f;
     for(int i = 0; i < points.size(); i++){
-        glm::vec2 point(x- points[i].x, y- points[i].y);
+        glm::vec2 point(x-points[0].x, y-points[0].y);
         int dim = 2;
-        float bandwidth = 1.0f;
+        float bandwidth = 100.0f;
         glm::mat2 H(1.0f);
-        glm::vec1 resExpo = point * (bandwidth * H) * point;
-        resExpo = resExpo * 0.5f;
-        val = val + glm::sqrt(2.0f * M_PI) * glm::sqrt(glm::determinant(H)) * glm::exp(resExpo.x);
+        float resExpo = -0.5f * (point.x * 100.0f * point.x + point.y * 100.0f * point.y);
+        val = val +(1.0f/(2*M_PI))*(1.0f/glm::sqrt(glm::determinant(H)))*glm::exp(resExpo);
     }
-    return val;
+    return val/points.size();
 }
 
 Shader::Shader(){
@@ -891,20 +887,48 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
         pole = quats[0] * pole * glm::conjugate(quats[0]);
 
         glm::vec3 dir = pole - glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec2 planePoint(dir.x / (1.0f + dir.z), dir.y / (1.0f + dir.z));
+        //glm::vec2 planePoint(dir.x / (1.0f + dir.z), dir.y / (1.0f + dir.z));
+        glm::vec2 planePoint(0.0f, 0.0f);
         
         kde.PushPoint(planePoint);
     }
-    std::array<std::array<float,8>,8>coeff = chebfun2(kde);
-    
+    std::array<std::array<float,256>,256>coeff = chebfun2(kde);
+    std::vector<float > valuesReal;
+    std::vector<float > valuesApprox;
     for(int i = 0; i < 100; i++){
         for(int j = 0; j < 100; j++){
-            float xStep = (2.0f/100)*i - 1.0f;
-            float yStep = (2.0f/100)*i - 1.0f;
-            std::cout<<"Error: "<< kde.F(xStep, yStep) - shebeval2(coeff,xStep,yStep) << std::endl; 
+            float xStep = (2.0f/100.0f)*float(j) - 1.0f;
+            float yStep = (2.0f/100.0f)*float(i) - 1.0f;
+            valuesReal.push_back(kde.F(xStep, yStep));
+            valuesApprox.push_back(shebeval2(coeff,xStep,yStep));
+            //std::cout<<"Error: "<< kde.F(xStep, yStep) - shebeval2(coeff,xStep,yStep) << std::endl; 
         }
     }
+    //Create HDF5 file//
+    H5::H5File file("../test/data/Generated/EXAMPLE_DSET.h5", H5F_ACC_TRUNC);
 
+    //Create the data space for the data set//
+    const int RANK = 2;
+    hsize_t dimsC[2];
+    
+    dimsC[0] = 256;
+    dimsC[1] = 256;
+  
+
+    hsize_t dims[2];
+    dims[0] = 100;
+    dims[1] = 100;
+    H5::DataSpace dataspace(RANK,dims);
+    H5::DataSpace dataspaceCoeff(RANK,dimsC);
+    H5::DataSet datasetC = file.createDataSet("/Coeff", H5::PredType::NATIVE_FLOAT, dataspaceCoeff);
+    H5::DataSet datasetR = file.createDataSet("/ValuesReal", H5::PredType::NATIVE_FLOAT, dataspace);
+    H5::DataSet datasetA = file.createDataSet("/ValuesApprox", H5::PredType::NATIVE_FLOAT, dataspace);
+
+    //Write the data to the dataset using default memory space, file space and transfer properties//
+    datasetC.write(coeff.data(), H5::PredType::NATIVE_FLOAT);
+    datasetR.write(valuesReal.data(), H5::PredType::NATIVE_FLOAT);
+    datasetA.write(valuesApprox.data(), H5::PredType::NATIVE_FLOAT);
+    
     //Calculate KDE
 
     // Appoximate density of points using Kernel Density Estimation(KDE)

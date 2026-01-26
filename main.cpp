@@ -86,7 +86,7 @@ int main()
     fig.SetYLabel("Count");
     fig.SetTextScale(0.0006f);
     fig.SetTickScale(0.0006f);
-    fig.Hist(data_out,0, 65535,200);
+    //fig.Hist(data_out,0, 65535,200);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
     fig.SetPlotScale(0.0f, 0.0f, 0.0f);
     std::vector<glm::quat>quats{glm::quat(0.0f,0.0f,0.0f,1.0f)};
