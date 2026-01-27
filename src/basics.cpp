@@ -28,6 +28,7 @@ float plane[] = {
     0.0f, 1.0f, 0.0f, 0.0f,  1.0f,  // top right
     0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
     1.0f, 0.0f, 0.0f, 1.0f, 0.0f,// bottom right
+
     0.0f, 1.0f, 0.0f, 0.0f,  1.0f,
     1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  // bottom left
     1.0f, 0.0f, 0.0f, 1.0f, 0.0f   // top left 
@@ -971,7 +972,7 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1026,6 +1027,7 @@ void Figure::CalculateTicks() {
         //oss.clear();
     }
     correctionAxisMat = glm::scale(glm::mat4(1.0f), glm::vec3((dataMaxX - dataMinX)/ totalXDelta,(dataMaxY - dataMinY)/ totalYDelta,1.0f));
+    correctionAxisMat = glm::mat4(1.0f);
 }
 
 void Figure::CalculatePlotTransforms() {

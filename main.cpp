@@ -88,7 +88,7 @@ int main()
     fig.SetTickScale(0.0006f);
     //fig.Hist(data_out,0, 65535,200);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
-    fig.SetPlotScale(0.0f, 0.0f, 0.0f);
+    fig.SetPlotScale(1.0f, 1.0f, 1.0f);
     std::vector<glm::quat>quats{glm::quat(0.0f,0.0f,0.0f,1.0f)};
     fig.PoleFigure(quats,glm::vec3(0.0f,0.0f,-1.0f),0.0f,0.0f);
     
