@@ -138,6 +138,10 @@ enum class PlotsType : unsigned int {
 * Heat 
 */
 struct Figure {
+
+    static bool initalized;
+    static Shader shader;
+
     TextRender txtRender;
 
     std::string xLabel;
@@ -165,6 +169,7 @@ struct Figure {
     glm::vec4 rgba;
     glm::vec2 resolution;
     float antiAliasing;
+    unsigned int textureID;
     //Should this be static? UV don't change
 
     float thicknessCorrection;

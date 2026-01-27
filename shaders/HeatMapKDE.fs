@@ -1,14 +1,24 @@
 #version 330 core
 
+uniform sampler2D chebyShevPoly;
+
 uniform float antialias;
 uniform float thickness;
 uniform vec4 color;
 
-out vec4 FragColor;
-
 in vec2 uv;
 
+out vec4 FragColor;
+
 void main() {
-	float height = 
-	gl_FragColor = vec4(color.rgb, 0.0);
+	float res = 0.0f;
+    ivec2 index;
+    for(int i = 0; i < 128; i++){
+        for(int j = 0; j < 128; j++){
+            index = ivec2(i,j);
+            res = res + texelFetch(chebyShevPoly, index,0).r * cos(i*acos(uv.x))*cos(j*acos(uv.y));
+        }
+    }
+    //res = clamp(res,0.0,1.0);
+	gl_FragColor = vec4(res*10.0 ,0.0,0.0, 1.0);
 }

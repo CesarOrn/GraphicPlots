@@ -24,6 +24,15 @@ float uvs[] = {
     1.0f, 1.0f,  // bottom left
     1.0f, 0.0f   // top left 
 };
+float plane[] = {
+    0.0f, 1.0f, 0.0f, 0.0f,  1.0f,  // top right
+    0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 1.0f, 0.0f,// bottom right
+    0.0f, 1.0f, 0.0f, 0.0f,  1.0f,
+    1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  // bottom left
+    1.0f, 0.0f, 0.0f, 1.0f, 0.0f   // top left 
+
+};
 unsigned int indices[] = {  // note that we start from 0!
     0, 1, 3,  // first Triangle
     0, 2, 3   // second Triangle
@@ -74,10 +83,10 @@ float fftChebyCoeff(KDE& f, int p, int q, int n, int m) {
     return coeff;
 }
 
-std::array<std::array<float,256>,256> chebfun2(KDE& f){
+std::array<std::array<float, 128>, 128> chebfun2(KDE& f){
  
-    int n = 256;
-    std::array<std::array<float,256>,256> a;
+    int n = 128;
+    std::array<std::array<float, 128>, 128> a;
 
     int m = 2*n;
     //std::vector<float>x;
@@ -102,10 +111,10 @@ std::array<std::array<float,256>,256> chebfun2(KDE& f){
     return a;
 }
 
-float shebeval2(std::array<std::array<float,256>,256> a, float x, float y){
+float shebeval2(std::array<std::array<float, 128>, 128> a, float x, float y){
     float res = 0.0f;
-    for(int i = 0; i <256; i++){
-        for(int j = 0; j < 256; j++){
+    for(int i = 0; i < 128; i++){
+        for(int j = 0; j < 128; j++){
             res = res + a[i][j] * cos(i*acos(x))*cos(j*acos(y));
         }
     }
@@ -674,8 +683,14 @@ void TextRender::Draw(glm::mat4 viewProj,glm::vec2 pos, float rotation, float sc
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
+bool Figure::initalized = false;
+Shader Figure::shader = Shader();
 Figure::Figure(){
+    if (!Figure::initalized) {
+        std::cout << "Loaded Heat Shader" << std::endl;
+        Figure::shader.Load("../shaders/HeatMapKDE.vs", "../shaders/HeatMapKDE.fs");
+        Figure::initalized = true;
+    }
     TextRender txtRender = TextRender();
     xLabelScale = 0.002f;
     yLabelScale = 0.002f;
@@ -878,6 +893,8 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
 }
 
 void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta, float phi) {
+    // Appoximate density of points using Kernel Density Estimation(KDE)
+    //https://arxiv.org/pdf/1504.04693
     KDE kde;
     // Project points to 0 z plane.
     for (int i = 0; i < quats.size(); i ++) {
@@ -892,7 +909,7 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
         
         kde.PushPoint(planePoint);
     }
-    std::array<std::array<float,256>,256>coeff = chebfun2(kde);
+    std::array<std::array<float,128>, 128>coeff = chebfun2(kde);
     std::vector<float > valuesReal;
     std::vector<float > valuesApprox;
     for(int i = 0; i < 100; i++){
@@ -904,36 +921,65 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
             //std::cout<<"Error: "<< kde.F(xStep, yStep) - shebeval2(coeff,xStep,yStep) << std::endl; 
         }
     }
-    //Create HDF5 file//
-    H5::H5File file("../test/data/Generated/EXAMPLE_DSET.h5", H5F_ACC_TRUNC);
 
-    //Create the data space for the data set//
-    const int RANK = 2;
-    hsize_t dimsC[2];
+    dataMaxZ = 1.0f;
+    dataMinZ = 0.0f;
+    dataMaxY = 1.0f;
+    dataMinY = 0.0f;
+    dataMaxX = 1.0f;
+    dataMinX = 0.0f;
+
+    CalculateTicks();
+    CalculatePlotTransforms();
+   
+    glDeleteTextures(1, &textureID);
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RED,
+        128,
+        128,
+        0,
+        GL_RED,
+        GL_FLOAT,
+        coeff.data()
+    );
+    // set texture options
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //Delete a older plot.
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    //glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(plane), plane, GL_STATIC_DRAW);
+
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
     
-    dimsC[0] = 256;
-    dimsC[1] = 256;
-  
 
-    hsize_t dims[2];
-    dims[0] = 100;
-    dims[1] = 100;
-    H5::DataSpace dataspace(RANK,dims);
-    H5::DataSpace dataspaceCoeff(RANK,dimsC);
-    H5::DataSet datasetC = file.createDataSet("/Coeff", H5::PredType::NATIVE_FLOAT, dataspaceCoeff);
-    H5::DataSet datasetR = file.createDataSet("/ValuesReal", H5::PredType::NATIVE_FLOAT, dataspace);
-    H5::DataSet datasetA = file.createDataSet("/ValuesApprox", H5::PredType::NATIVE_FLOAT, dataspace);
-
-    //Write the data to the dataset using default memory space, file space and transfer properties//
-    datasetC.write(coeff.data(), H5::PredType::NATIVE_FLOAT);
-    datasetR.write(valuesReal.data(), H5::PredType::NATIVE_FLOAT);
-    datasetA.write(valuesApprox.data(), H5::PredType::NATIVE_FLOAT);
-    
-    //Calculate KDE
-
-    // Appoximate density of points using Kernel Density Estimation(KDE)
-    //https://arxiv.org/pdf/1504.04693
-
+    drawCount = 6;
+    plotType = PlotsType::HEAT_MAP;
 }
 
 void Figure::CalculateTicks() {
@@ -985,20 +1031,20 @@ void Figure::CalculateTicks() {
 void Figure::CalculatePlotTransforms() {
     float dataDeltaX = dataMaxX - dataMinX;
     if (dataDeltaX == 0.0f) {
-        dataDeltaX = 1;
+        dataDeltaX = 1.0f;
     }
     float dataDeltaY = dataMaxY - dataMinY;
     if (dataDeltaY == 0.0f) {
-        dataDeltaY = 1;
+        dataDeltaY = 1.0f;
     }
     float dataDeltaZ = dataMaxZ - dataMinZ;
     if (dataDeltaZ == 0.0f) {
-        dataDeltaZ = 1;
+        dataDeltaZ = 1.0f;
     }
     glm::vec3 axisTranslate((axisThickness + axisAntiAliasing)/2.0f , (axisThickness + axisAntiAliasing) / 2.0f, 0);
-    glm::vec3 axisScales(1.0f / dataDeltaX * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)),
-                         1.0f / dataDeltaY * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)),
-                         1.0f / dataDeltaZ * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)));
+    glm::vec3 axisScales((1.0f / dataDeltaX) * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)),
+                         (1.0f / dataDeltaY) * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)),
+                         (1.0f / dataDeltaZ) * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f)));
 
     correctionPlotMat = glm::scale(glm::translate(glm::mat4(1.0f), axisTranslate), axisScales);
     thicknessCorrection = dataDeltaX * (1.0f - ((axisThickness + axisAntiAliasing) / 2.0f));
@@ -1034,11 +1080,20 @@ void Figure::Draw(glm::mat4 proj) {
         ID = LineArea::shader.ID;
         mode = GL_LINE_STRIP;
     }else if (plotType == PlotsType::LINE) {
-        ID = Line::shader.ID;
+        ID = Figure::shader.ID;
         mode = GL_LINE_STRIP_ADJACENCY;
+    }
+    else if (plotType == PlotsType::HEAT_MAP) {
+        ID = Figure::shader.ID;
+        mode = GL_TRIANGLES;
     }
 
     glUseProgram(ID);
+    if (plotType == PlotsType::HEAT_MAP) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glUniform1i(glGetUniformLocation(ID, "chebyShevPoly"), 0);
+    }
     glUniformMatrix4fv(glGetUniformLocation(ID, "mvp"), 1, false, &mvp[0][0]);
     glUniform1f(glGetUniformLocation(ID, "antialias"), antiAliasing * thicknessCorrection);
     glUniform1f(glGetUniformLocation(ID, "thickness"),  thickness* thicknessCorrection );
