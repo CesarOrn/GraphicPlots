@@ -175,10 +175,14 @@ struct Figure {
     float thicknessCorrection;
     float antiAliasingCorrection;
 
+    //Drawing
     int drawCount;
     unsigned int VAO;
     unsigned int VBO;
     unsigned int EBO;
+
+    //texture Buffers
+    unsigned int bufferTex;
 
     //Data stats for scaling points
     float dataMaxZ;

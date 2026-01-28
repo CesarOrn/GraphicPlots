@@ -893,6 +893,13 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
     plotType = PlotsType::LINE_AREA;
 }
 
+/*
+* 
+* while using polynomials approximation does reduce the amount of data,
+* Texel lookups hinders performance enough that a better a solution
+*  needs to be crated.
+* 
+*/
 void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta, float phi) {
     // Appoximate density of points using Kernel Density Estimation(KDE)
     //https://arxiv.org/pdf/1504.04693
@@ -933,25 +940,21 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
     CalculateTicks();
     CalculatePlotTransforms();
    
+    // Ensure texture buffer is correctly allocated.
+    glDeleteBuffers(1, &bufferTex);
+    glGenBuffers(1, &bufferTex );
+    glBindBuffer(GL_TEXTURE_BUFFER, bufferTex); // Bind to GL_TEXTURE_BUFFER target
+    // Allocate storage for the buffer object (e.g., a large array of floats)
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(float)*128 * 128, coeff.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_TEXTURE_BUFFER, 0); // Unbind the buffer
+    
+
+
+    // Enusre texture are allocated correclty and attach buffer to texture
     glDeleteTextures(1, &textureID);
     glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RED,
-        128,
-        128,
-        0,
-        GL_RED,
-        GL_FLOAT,
-        coeff.data()
-    );
-    // set texture options
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_BUFFER, textureID);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, bufferTex);
 
     //Delete a older plot.
     glDeleteVertexArrays(1, &VAO);
