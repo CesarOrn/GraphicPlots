@@ -51,3 +51,8 @@
 #lorem(200)
 = Well
 #lorem(200)
+= Resource
+• Color palette article: https://iquilezles.org/articles/palettes/
+• Color palette webapp: http://dev.thi.ng/gradients/
+• Graphtoy: https://graphtoy.com/
+
