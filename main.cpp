@@ -21,7 +21,7 @@ unsigned int SCR_HEIGHT = 600;
 glm::mat4 proj(1.0f);
 
 int main()
-{
+ {
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();

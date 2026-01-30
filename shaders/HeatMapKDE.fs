@@ -1,6 +1,6 @@
 #version 330 core
-
-uniform samplerBuffer chebyShevPoly;
+#define PI 3.14159265359
+uniform sampler2D  chebyShevPoly;
 
 uniform float antialias;
 uniform float thickness;
@@ -10,22 +10,20 @@ in vec2 uv;
 
 out vec4 FragColor;
 
-void main() {
-	float res = 0.0;
-    ivec2 index;
-    float theta_x = acos(uv.x * 2.0 -1.0);
-    float theat_y = acos(uv.y * 2.0 -1.0);
-    for(int j = 0; j < 20;j++){
-        for(int i = 0; i < 20;i++){
-            index = ivec2(i,j);
-            float a = texelFetch(chebyShevPoly, i + 128 * j).r;
-            float i_f = i;
-            float j_f = j;
+vec3 colorCode(vec3 a, vec3 b, vec3 c, vec3 d, float t){
+    float tClmp = clamp(0.0,1.0,t);
+    vec3 color = 
+    return cos(c * t);
+}
 
-            res = res + a * cos(i_f*theta_x)*cos(j_f*theat_y);
-        }
-    }
-    //res = clamp(res,0.0,1.0);
-    vec3 color = mix(vec3(0.1,0.2,0.0),vec3(0.75,0.4,0.0),res/0.08);
+void main() {
+    
+    vec3 a = vec3(0.46,0.46,0.46);
+    vec3 b = vec3(0.46,0.46,0.46);
+    vec3 c = vec3(0.7,0.0,0.5);
+    vec3 d = vec3(0.52,0.52,0.52);
+    vec2 uvShift = (uv * 2.0) -1.0;
+    float dens = texture(chebyShevPoly,uv).r;
+    vec3 color = colorCode(a,b,c,d,dens);
 	gl_FragColor = vec4(color, 1.0);
 }

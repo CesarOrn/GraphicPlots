@@ -897,7 +897,10 @@ void Figure::PlotArea(std::vector<glm::vec3> points){
 * 
 * while using polynomials approximation does reduce the amount of data,
 * Texel lookups hinders performance enough that a better a solution
-*  needs to be crated.
+* needs to be crated.
+* 
+* Better solution may just be to use a texture. While not ideal for data
+* resolution when zooming, this solution is fast enougth for graphics.
 * 
 */
 void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta, float phi) {
@@ -917,16 +920,13 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
         
         kde.PushPoint(planePoint);
     }
-    std::array<std::array<float,128>, 128>coeff = chebfun2(kde);
-    std::vector<float > valuesReal;
-    std::vector<float > valuesApprox;
-    for(int i = 0; i < 100; i++){
-        for(int j = 0; j < 100; j++){
-            float xStep = (2.0f/100.0f)*float(j) - 1.0f;
-            float yStep = (2.0f/100.0f)*float(i) - 1.0f;
-            valuesReal.push_back(kde.F(xStep, yStep));
-            valuesApprox.push_back(shebeval2(coeff,xStep,yStep));
-            //std::cout<<"Error: "<< kde.F(xStep, yStep) - shebeval2(coeff,xStep,yStep) << std::endl; 
+    std::vector<float> texImage;
+
+    for (int i = 0; i < 1024; i++) {
+        for (int j = 0; j < 1024; j++) {
+            float iF = (float(i) / 1024 - 0.5f) * 2.0f;
+            float jF = (float(j) / 1024 - 0.5f) * 2.0f;
+            texImage.push_back(kde.F(iF,jF));
         }
     }
 
@@ -941,20 +941,26 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
     CalculatePlotTransforms();
    
     // Ensure texture buffer is correctly allocated.
-    glDeleteBuffers(1, &bufferTex);
-    glGenBuffers(1, &bufferTex );
-    glBindBuffer(GL_TEXTURE_BUFFER, bufferTex); // Bind to GL_TEXTURE_BUFFER target
-    // Allocate storage for the buffer object (e.g., a large array of floats)
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(float)*128 * 128, coeff.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_TEXTURE_BUFFER, 0); // Unbind the buffer
-    
-
-
-    // Enusre texture are allocated correclty and attach buffer to texture
     glDeleteTextures(1, &textureID);
     glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_BUFFER, textureID);
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, bufferTex);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RED,
+        1024,
+        1024,
+        0,
+        GL_RED,
+        GL_FLOAT,
+        texImage.data()
+    );
+    // set texture options
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   
 
     //Delete a older plot.
     glDeleteVertexArrays(1, &VAO);
