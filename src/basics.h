@@ -16,6 +16,8 @@
 // https://towardsdatascience.com/kernel-density-estimator-for-multidimensional-data-3e78c9779ed8/
 struct KDE{
     std::vector<glm::vec2> points;
+    float bandWidth;
+    void SetBandWidth(float bw);
     void PushPoint(glm::vec2 point);
     float F(float x, float y);
 };

@@ -158,17 +158,20 @@ void checkCompileErrors(unsigned int shader, std::string type)
     }
 }
 
+void KDE::SetBandWidth(float bw) {
+    bandWidth = bw;
+}
+
 void KDE::PushPoint(glm::vec2 point){
     points.push_back(point);
 }
 float KDE::F(float x, float y){
     float val = 0.0f;
     for(int i = 0; i < points.size(); i++){
-        glm::vec2 point(x-points[0].x, y-points[0].y);
+        glm::vec2 point(x-points[i].x, y-points[i].y);
         int dim = 2;
-        float bandwidth = 100.0f;
         glm::mat2 H(1.0f);
-        float resExpo = -0.5f * (point.x * 100.0f * point.x + point.y * 100.0f * point.y);
+        float resExpo = -0.5f * (point.x * bandWidth * point.x + point.y * bandWidth * point.y);
         val = val +(1.0f/(2*M_PI))*(1.0f/glm::sqrt(glm::determinant(H)))*glm::exp(resExpo);
     }
     return val/points.size();
@@ -912,11 +915,11 @@ void Figure::PoleFigure(std::vector<glm::quat> quats, glm::vec3 ref, float theta
         //https://mompiou.github.io/pycotem/stereoproj/
         //Rotate and project pole. 
         glm::vec3 pole(0.0f, 0.0f, 1.0f);
-        pole = quats[0] * pole * glm::conjugate(quats[0]);
-
+        pole = quats[i] * pole;
+        pole = glm::normalize(pole);
         glm::vec3 dir = pole - glm::vec3(0.0f, 0.0f, -1.0f);
-        //glm::vec2 planePoint(dir.x / (1.0f + dir.z), dir.y / (1.0f + dir.z));
-        glm::vec2 planePoint(0.0f, 0.0f);
+        glm::vec2 planePoint(dir.x / (1.0f + dir.z), dir.y / (1.0f + dir.z));
+        //glm::vec2 planePoint(0.0f, 0.0f);
         
         kde.PushPoint(planePoint);
     }

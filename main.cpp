@@ -77,7 +77,6 @@ int main()
     // Read the data from the dataset into the memory buffer
     // The PredType::NATIVE_INT specifies the type in memory (C++ int)
     dataset.read(data_out.data(), H5::PredType::NATIVE_FLOAT);
-    std::cout << data_out[0] << std::endl;
  
     glm::mat4 view(1.0f);
     
@@ -89,7 +88,10 @@ int main()
     //fig.Hist(data_out,0, 65535,200);
     fig.SetPlotTranslate(0.0f, 0.0f, 0.0f);
     fig.SetPlotScale(1.0f, 1.0f, 1.0f);
-    std::vector<glm::quat>quats{glm::quat(0.0f,0.0f,0.0f,1.0f)};
+    std::vector<glm::quat>quats{ glm::quat(0, 0.7071068f, 0, 0.7071068f),
+                                 glm::quat(-0.5f, 0.5f, 0.5f, 0.5f),
+                                 glm::quat(0.0f,0.0f,0.0f,1.0f),
+                                 glm::quat(-0.707f, 0, 0.707f, 0.0f)};
     fig.PoleFigure(quats,glm::vec3(0.0f,0.0f,-1.0f),0.0f,0.0f);
     
     proj = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
